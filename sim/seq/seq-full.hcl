@@ -1,12 +1,12 @@
 #/* $begin seq-all-hcl */
 ####################################################################
-#  HCL Description of Control for Single Cycle Y86 Processor SEQ   #
+#  HCL Description of Control for Single Cycle Y86-64 Processor SEQ   #
 #  Copyright (C) Randal E. Bryant, David R. O'Hallaron, 2010       #
 ####################################################################
 
-## Your task is to implement the iaddl and leave instructions
+## Your task is to implement the iaddq instruction
 ## The file contains a declaration of the icodes
-## for iaddl (IIADDL) and leave (ILEAVE).
+## for iaddq (IIADDQ)
 ## Your job is to add the rest of the logic to make it work
 
 ####################################################################
@@ -17,7 +17,7 @@ quote '#include <stdio.h>'
 quote '#include "isa.h"'
 quote '#include "sim.h"'
 quote 'int sim_main(int argc, char *argv[]);'
-quote 'int gen_pc(){return 0;}'
+quote 'word_t gen_pc(){return 0;}'
 quote 'int main(int argc, char *argv[])'
 quote '  {plusmode=0;return sim_main(argc,argv);}'
 
@@ -25,67 +25,65 @@ quote '  {plusmode=0;return sim_main(argc,argv);}'
 #    Declarations.  Do not change/remove/delete any of these       #
 ####################################################################
 
-##### Symbolic representation of Y86 Instruction Codes #############
-intsig INOP 	'I_NOP'
-intsig IHALT	'I_HALT'
-intsig IRRMOVL	'I_RRMOVL'
-intsig IIRMOVL	'I_IRMOVL'
-intsig IRMMOVL	'I_RMMOVL'
-intsig IMRMOVL	'I_MRMOVL'
-intsig IOPL	'I_ALU'
-intsig IJXX	'I_JMP'
-intsig ICALL	'I_CALL'
-intsig IRET	'I_RET'
-intsig IPUSHL	'I_PUSHL'
-intsig IPOPL	'I_POPL'
-# Instruction code for iaddl instruction
-intsig IIADDL	'I_IADDL'
-# Instruction code for leave instruction
-intsig ILEAVE	'I_LEAVE'
+##### Symbolic representation of Y86-64 Instruction Codes #############
+wordsig INOP 	'I_NOP'
+wordsig IHALT	'I_HALT'
+wordsig IRRMOVQ	'I_RRMOVQ'
+wordsig IIRMOVQ	'I_IRMOVQ'
+wordsig IRMMOVQ	'I_RMMOVQ'
+wordsig IMRMOVQ	'I_MRMOVQ'
+wordsig IOPQ	'I_ALU'
+wordsig IJXX	'I_JMP'
+wordsig ICALL	'I_CALL'
+wordsig IRET	'I_RET'
+wordsig IPUSHQ	'I_PUSHQ'
+wordsig IPOPQ	'I_POPQ'
 
-##### Symbolic represenations of Y86 function codes                  #####
-intsig FNONE    'F_NONE'        # Default function code
+# Instruction code for iaddq instruction
+wordsig IIADDQ	'I_IADDQ'
 
-##### Symbolic representation of Y86 Registers referenced explicitly #####
-intsig RESP     'REG_ESP'    	# Stack Pointer
-intsig REBP     'REG_EBP'    	# Frame Pointer
-intsig RNONE    'REG_NONE'   	# Special value indicating "no register"
+##### Symbolic represenations of Y86-64 function codes                  #####
+wordsig FNONE    'F_NONE'        # Default function code
+
+##### Symbolic representation of Y86-64 Registers referenced explicitly #####
+wordsig RRSP     'REG_RSP'    	# Stack Pointer
+wordsig RNONE    'REG_NONE'   	# Special value indicating "no register"
 
 ##### ALU Functions referenced explicitly                            #####
-intsig ALUADD	'A_ADD'		# ALU should add its arguments
+wordsig ALUADD	'A_ADD'		# ALU should add its arguments
 
 ##### Possible instruction status values                             #####
-intsig SAOK	'STAT_AOK'		# Normal execution
-intsig SADR	'STAT_ADR'	# Invalid memory address
-intsig SINS	'STAT_INS'	# Invalid instruction
-intsig SHLT	'STAT_HLT'	# Halt instruction encountered
+wordsig SAOK	'STAT_AOK'	# Normal execution
+wordsig SADR	'STAT_ADR'	# Invalid memory address
+wordsig SINS	'STAT_INS'	# Invalid instruction
+wordsig SHLT	'STAT_HLT'	# Halt instruction encountered
 
 ##### Signals that can be referenced by control logic ####################
 
 ##### Fetch stage inputs		#####
-intsig pc 'pc'				# Program counter
+wordsig pc 'pc'				# Program counter
 ##### Fetch stage computations		#####
-intsig imem_icode 'imem_icode'		# icode field from instruction memory
-intsig imem_ifun  'imem_ifun' 		# ifun field from instruction memory
-intsig icode	  'icode'		# Instruction control code
-intsig ifun	  'ifun'		# Instruction function
-intsig rA	  'ra'			# rA field from instruction
-intsig rB	  'rb'			# rB field from instruction
-intsig valC	  'valc'		# Constant from instruction
-intsig valP	  'valp'		# Address of following instruction
+wordsig imem_icode 'imem_icode'		# icode field from instruction memory
+wordsig imem_ifun  'imem_ifun' 		# ifun field from instruction memory
+wordsig icode	  'icode'		# Instruction control code
+wordsig ifun	  'ifun'		# Instruction function
+wordsig rA	  'ra'			# rA field from instruction
+wordsig rB	  'rb'			# rB field from instruction
+wordsig valC	  'valc'		# Constant from instruction
+wordsig valP	  'valp'		# Address of following instruction
 boolsig imem_error 'imem_error'		# Error signal from instruction memory
 boolsig instr_valid 'instr_valid'	# Is fetched instruction valid?
 
 ##### Decode stage computations		#####
-intsig valA	'vala'			# Value from register A port
-intsig valB	'valb'			# Value from register B port
+wordsig valA	'vala'			# Value from register A port
+wordsig valB	'valb'			# Value from register B port
 
 ##### Execute stage computations	#####
-intsig valE	'vale'			# Value computed by ALU
+wordsig valE	'vale'			# Value computed by ALU
 boolsig Cnd	'cond'			# Branch test
 
 ##### Memory stage computations		#####
-intsig valM	'valm'			# Value read from memory
+wordsig valM	'valm'			# Value read from memory
 boolsig dmem_error 'dmem_error'		# Error signal from data memory
 
 
@@ -96,117 +94,114 @@ boolsig dmem_error 'dmem_error'		# Error signal from data memory
 ################ Fetch Stage     ###################################
 
 # Determine instruction code
-int icode = [
+word icode = [
 	imem_error: INOP;
 	1: imem_icode;		# Default: get from instruction memory
 ];
 
 # Determine instruction function
-int ifun = [
+word ifun = [
 	imem_error: FNONE;
 	1: imem_ifun;		# Default: get from instruction memory
 ];
 
-bool instr_valid = icode in 
-	{ INOP, IHALT, IRRMOVL, IIRMOVL, IRMMOVL, IMRMOVL,
-	       IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL, IIADDL, ILEAVE };
+bool instr_valid = icode in
+	{ INOP, IHALT, IRRMOVQ, IIRMOVQ, IRMMOVQ, IMRMOVQ,
+	       IOPQ, IJXX, ICALL, IRET, IPUSHQ, IPOPQ, IIADDQ };
 
 # Does fetched instruction require a regid byte?
 bool need_regids =
-	icode in { IRRMOVL, IOPL, IPUSHL, IPOPL, 
-		     IIRMOVL, IRMMOVL, IMRMOVL, IIADDL };
+	icode in { IRRMOVQ, IOPQ, IPUSHQ, IPOPQ, 
+		     IIRMOVQ, IRMMOVQ, IMRMOVQ, IIADDQ };
 
 # Does fetched instruction require a constant word?
 bool need_valC =
-	icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL, IIADDL };
+	icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ, IJXX, ICALL, IIADDQ };
 
 ################ Decode Stage    ###################################
 
 ## What register should be used as the A source?
-int srcA = [
-	icode in { IRRMOVL, IRMMOVL, IOPL, IPUSHL  } : rA;
-	icode in { IPOPL, IRET } : RESP;
-	icode == ILEAVE : REBP;
+word srcA = [
+	icode in { IRRMOVQ, IRMMOVQ, IOPQ, IPUSHQ  } : rA;
+	icode in { IPOPQ, IRET } : RRSP;
 	1 : RNONE; # Don't need register
 ];
 
 ## What register should be used as the B source?
-int srcB = [
-	icode in { IOPL, IRMMOVL, IMRMOVL, IIADDL  } : rB;
-	icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
-	icode == ILEAVE : REBP;
+word srcB = [
+	icode in { IOPQ, IRMMOVQ, IMRMOVQ, IIADDQ } : rB;
+	icode in { IPUSHQ, IPOPQ, ICALL, IRET } : RRSP;
 	1 : RNONE;  # Don't need register
 ];
 
 ## What register should be used as the E destination?
-int dstE = [
-	icode in { IRRMOVL } && Cnd : rB;
-	icode in { IIRMOVL, IOPL, IIADDL} : rB;
-	icode in { IPUSHL, IPOPL, ICALL, IRET, ILEAVE } : RESP;
+word dstE = [
+	icode in { IRRMOVQ } && Cnd : rB;
+	icode in { IIRMOVQ, IOPQ, IIADDQ } : rB;
+	icode in { IPUSHQ, IPOPQ, ICALL, IRET } : RRSP;
 	1 : RNONE;  # Don't write any register
 ];
 
 ## What register should be used as the M destination?
-int dstM = [
-	icode in { IMRMOVL, IPOPL } : rA;
-	icode == ILEAVE : REBP;
+word dstM = [
+	icode in { IMRMOVQ, IPOPQ } : rA;
 	1 : RNONE;  # Don't write any register
 ];
 
 ################ Execute Stage   ###################################
 
 ## Select input A to ALU
-int aluA = [
-	icode in { IRRMOVL, IOPL } : valA;
-	icode in { IIRMOVL, IRMMOVL, IMRMOVL, IIADDL } : valC;
-	icode in { ICALL, IPUSHL } : -4;
-	icode in { IRET, IPOPL, ILEAVE } : 4;
+word aluA = [
+	icode in { IRRMOVQ, IOPQ } : valA;
+	icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ, IIADDQ } : valC;
+	icode in { ICALL, IPUSHQ } : -8;
+	icode in { IRET, IPOPQ } : 8;
 	# Other instructions don't need ALU
 ];
 
 ## Select input B to ALU
-int aluB = [
-	icode in { IRMMOVL, IMRMOVL, IOPL, ICALL, 
-		      IPUSHL, IRET, IPOPL, IIADDL, ILEAVE } : valB;
-	icode in { IRRMOVL, IIRMOVL } : 0;
+word aluB = [
+	icode in { IRMMOVQ, IMRMOVQ, IOPQ, ICALL,
+		      IPUSHQ, IRET, IPOPQ, IIADDQ } : valB;
+	icode in { IRRMOVQ, IIRMOVQ } : 0;
 	# Other instructions don't need ALU
 ];
 
 ## Set the ALU function
-int alufun = [
-	icode == IOPL : ifun;
+word alufun = [
+	icode == IOPQ : ifun;
 	1 : ALUADD;
 ];
 
 ## Should the condition codes be updated?
-bool set_cc = icode in { IOPL, IIADDL };
+bool set_cc = icode in { IOPQ, IIADDQ };
 
 ################ Memory Stage    ###################################
 
 ## Set read control signal
-bool mem_read = icode in { IMRMOVL, IPOPL, IRET, ILEAVE };
+bool mem_read = icode in { IMRMOVQ, IPOPQ, IRET };
 
 ## Set write control signal
-bool mem_write = icode in { IRMMOVL, IPUSHL, ICALL };
+bool mem_write = icode in { IRMMOVQ, IPUSHQ, ICALL };
 
 ## Select memory address
-int mem_addr = [
-	icode in { IRMMOVL, IPUSHL, ICALL, IMRMOVL } : valE;
-	icode in { IPOPL, IRET, ILEAVE } : valA;
+word mem_addr = [
+	icode in { IRMMOVQ, IPUSHQ, ICALL, IMRMOVQ } : valE;
+	icode in { IPOPQ, IRET } : valA;
 	# Other instructions don't need address
 ];
 
 ## Select memory input data
-int mem_data = [
+word mem_data = [
 	# Value from register
-	icode in { IRMMOVL, IPUSHL } : valA;
+	icode in { IRMMOVQ, IPUSHQ } : valA;
 	# Return PC
 	icode == ICALL : valP;
 	# Default: Don't write anything
 ];
 
 ## Determine instruction status
-int Stat = [
+word Stat = [
 	imem_error || dmem_error : SADR;
 	!instr_valid: SINS;
 	icode == IHALT : SHLT;
@@ -217,7 +212,7 @@ int Stat = [
 
 ## What address should instruction be fetched at
 
-int new_pc = [
+word new_pc = [
 	# Call.  Use instruction constant
 	icode == ICALL : valC;
 	# Taken branch.  Use instruction constant
