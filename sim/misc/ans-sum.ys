@@ -6,16 +6,16 @@ init: 		irmovl Stack, %esp	 	# set up stack pointer
 			halt 					# terminate program 
 
 # Sample linked list
-			.align 4
+			.align 8
 ele1:
-			.long 0X00a
-			.long ele2
+			.quad 0Xa00
+			.quad ele2
 ele2:
-			.long 0x0b0
-			.long ele3
+			.quad 0x0b0
+			.quad ele3
 ele3:
-			.long 0xc00
-			.long 0
+			.quad 0x00c
+			.quad 0
 
 Main: 		pushl %ebp 
 			rrmovl %esp,%ebp

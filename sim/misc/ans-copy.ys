@@ -8,15 +8,15 @@ init: 		irmovl Stack, %esp	 	# set up stack pointer
 			.align 4
 # Source block
 src:		
-			.long 0x000a
-			.long 0x00b0
-			.long 0x0c00
+			.quad 0x001
+			.quad 0x002
+			.quad 0x004
 
 # Destination block
 dest:		
-			.long 0x111
-			.long 0x222
-			.long 0x333
+			.quad 0x111
+			.quad 0x222
+			.quad 0x333
 
 Main: 		pushl %ebp 
 			rrmovl %esp,%ebp
