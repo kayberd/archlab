@@ -8,11 +8,8 @@ $yas = "../misc/yas";
 # Which simulator is being tested?
 $sim = "../pipe/psim";
 
-# By default, don't test leave instruction.
-$testleave = 0;
-
-# By default, don't test iaddl instruction.
-$testiaddl = 0;
+# By default, don't test iaddq instruction.
+$testiaddq = 0;
 
 # Where should result files be placed?
 $outputdir = ".";
@@ -136,13 +133,12 @@ sub test_stat
 
 sub cmdline {
     # parse command line arguments
-    getopts('hils:Pp:d:Vm:');
+    getopts('his:Pp:d:Vm:');
 
     if ($opt_h) {
         print STDERR "Usage $argv[0] [-h] [-i] [-s <sim>] [-P] [-p <pfile>]\n";
         print STDERR "   -h       print Help message\n";
-        print STDERR "   -i       test iaddl instruction\n";
-        print STDERR "   -l       test leave instruction\n";
+        print STDERR "   -i       test iaddq instruction\n";
         print STDERR "   -s <sim> Specify simulator\n";
         print STDERR "   -d <dir> Specify directory for counterexamples\n";
         print STDERR "   -P Generate performance data\n";
@@ -153,11 +149,7 @@ sub cmdline {
     }
 
     if ($opt_i) {
-	$testiaddl = 1;
-    }
-
-    if ($opt_l) {
-	$testleave = 1;
+	$testiaddq = 1;
     }
 
     if ($opt_d) {

@@ -11,40 +11,40 @@ cmdline();
 # Destination Instructions
 @dest =
 (
- # Having %eax as destination
- "1:rrmovl %ecx,%eax",
- "1:irmovl \$0x101,%eax",
- "1:mrmovl 0(%ebp),%eax",
- "1:addl   %eax,%eax",
- "1:popl   %eax",
- "1:cmovne %ecx,%eax", # Not taken
- "1:cmove  %ecx,%eax", # Taken
- # Instructions having %ebp as destination
- "2:rrmovl %eax,%ebp",
- "2:irmovl \$0x100,%ebp",
- "2:mrmovl 4(%ebp),%ebp",
- "2:addl   %eax,%ebp",
- "2:popl   %ebp",
- "2:cmovne %eax,%ebp", # Not taken
- "2:cmove  %eax,%ebp", # Taken
- # Instructions having %esp as destination
- "3:rrmovl %ebp,%esp",
- "3:irmovl \$0x104,%esp",
- "3:mrmovl 4(%ebp),%esp",
- "3:addl   %eax,%esp",
- "3:popl   %ebp",
- "3:pushl  %eax",
- "3:pushl  %esp",
- "3:popl   %esp",
- "1:cmovne %ebp,%esp", # Not taken
- "1:cmove  %ebp,%esp"  # Taken
+ # Having %rax as destination
+ "1:rrmovq %rcx,%rax",
+ "1:irmovq \$0x101,%rax",
+ "1:mrmovq 0(%rbp),%rax",
+ "1:addq   %rax,%rax",
+ "1:popq   %rax",
+ "1:cmovne %rcx,%rax", # Not taken
+ "1:cmove  %rcx,%rax", # Taken
+ # Instructions having %rbp as destination
+ "2:rrmovq %rax,%rbp",
+ "2:irmovq \$0x100,%rbp",
+ "2:mrmovq 4(%rbp),%rbp",
+ "2:addq   %rax,%rbp",
+ "2:popq   %rbp",
+ "2:cmovne %rax,%rbp", # Not taken
+ "2:cmove  %rax,%rbp", # Taken
+ # Instructions having %rsp as destination
+ "3:rrmovq %rbp,%rsp",
+ "3:irmovq \$0x104,%rsp",
+ "3:mrmovq 4(%rbp),%rsp",
+ "3:addq   %rax,%rsp",
+ "3:popq   %rbp",
+ "3:pushq  %rax",
+ "3:pushq  %rsp",
+ "3:popq   %rsp",
+ "1:cmovne %rbp,%rsp", # Not taken
+ "1:cmove  %rbp,%rsp"  # Taken
  );
 
-if ($testiaddl) {
+if ($testiaddq) {
     @dest = (@dest,
-	     "1:iaddl \$0x201,%eax",
-	     "2:iaddl \$0x4,%ebp",
-	     "3:iaddl \$0x4,%esp",);
+	     "1:iaddq \$0x201,%rax",
+	     "2:iaddq \$0x4,%rbp",
+	     "3:iaddq \$0x4,%rsp",);
 }
 
 if ($testleave) {
@@ -53,45 +53,41 @@ if ($testleave) {
 
 @src = 
 (
- # Instructions having %eax as source
- "1:rrmovl %eax,%ebp",
- "1:rmmovl %eax,0(%ebp)",
- "1:rmmovl %ebp,0(%eax)",
- "1:mrmovl 4(%eax),%ebp",
- "1:addl   %eax,%ebp",
- "1:addl   %ebp,%eax",
- "1:addl   %eax,%eax",
- "1:pushl  %eax",
- # Instructions having %ebp as source
- "2:rrmovl %ebp,%ebp",
- "2:rmmovl %ebp,4(%ebp)",
- "2:rmmovl %eax,0(%ebp)",
- "2:mrmovl 8(%ebp),%eax",
- "2:addl   %ebp,%eax",
- "2:addl   %eax,%ebp",
- "2:addl   %ebp,%ebp",
- "2:pushl  %ebp",
- # Instructions having %esp as source
- "3:rrmovl %esp,%ebp",
- "3:rmmovl %esp,4(%ebp)",
- "3:rmmovl %eax,-4(%esp)",
- "3:mrmovl 4(%esp),%eax",
- "3:addl   %esp,%eax",
- "3:addl   %eax,%esp",
- "3:addl   %esp,%esp",
- "3:pushl  %esp",
+ # Instructions having %rax as source
+ "1:rrmovq %rax,%rbp",
+ "1:rmmovq %rax,0(%rbp)",
+ "1:rmmovq %rbp,0(%rax)",
+ "1:mrmovq 4(%rax),%rbp",
+ "1:addq   %rax,%rbp",
+ "1:addq   %rbp,%rax",
+ "1:addq   %rax,%rax",
+ "1:pushq  %rax",
+ # Instructions having %rbp as source
+ "2:rrmovq %rbp,%rbp",
+ "2:rmmovq %rbp,4(%rbp)",
+ "2:rmmovq %rax,0(%rbp)",
+ "2:mrmovq 8(%rbp),%rax",
+ "2:addq   %rbp,%rax",
+ "2:addq   %rax,%rbp",
+ "2:addq   %rbp,%rbp",
+ "2:pushq  %rbp",
+ # Instructions having %rsp as source
+ "3:rrmovq %rsp,%rbp",
+ "3:rmmovq %rsp,4(%rbp)",
+ "3:rmmovq %rax,-4(%rsp)",
+ "3:mrmovq 4(%rsp),%rax",
+ "3:addq   %rsp,%rax",
+ "3:addq   %rax,%rsp",
+ "3:addq   %rsp,%rsp",
+ "3:pushq  %rsp",
  "3:ret"
  );
 
-if ($testiaddl) {
+if ($testiaddq) {
     @src = (@src,
-	    "1:iaddl \$0x301,%eax",
-	    "2:iaddl \$0x8,%ebp",
-	    "3:iaddl \$0x8,%esp");
-}
-
-if ($testleave) {
-    @src = (@src,  "2:leave", "3:leave");
+	    "1:iaddq \$0x301,%rax",
+	    "2:iaddq \$0x8,%rbp",
+	    "3:iaddq \$0x8,%rsp");
 }
 
 # Generate test with 4 instructions inserted
@@ -100,36 +96,36 @@ sub gen_test
     local ($i1, $i2, $i3, $i4) = @_;
     print YFILE <<STUFF;
     # Preamble.  Initialize memory and registers
-    irmovl \$0xf5,%eax
-    irmovl \$0,%ebp
-    rmmovl %eax,0xf0(%ebp)
-    irmovl \$0xf7,%eax
-    rmmovl %eax,0xf4(%ebp)
-    irmovl \$0xfb,%eax
-    rmmovl %eax,0xf8(%ebp)
-    irmovl \$0xff,%eax
-    rmmovl %eax,0xfc(%ebp)
-    irmovl \$0x100,%ebp
-    irmovl \$0x10c,%esp
-    xorl %eax,%eax      # Set Z condition code
-    irmovl \$0x80,%eax
+    irmovq \$0xf5,%rax
+    irmovq \$0,%rbp
+    rmmovq %rax,0xe0(%rbp)
+    irmovq \$0xf7,%rax
+    rmmovq %rax,0xe8(%rbp)
+    irmovq \$0xfb,%rax
+    rmmovq %rax,0xf0(%rbp)
+    irmovq \$0xff,%rax
+    rmmovq %rax,0xf8(%rbp)
+    irmovq \$0x100,%rbp
+    irmovq \$0x10c,%rsp
+    xorq %rax,%rax      # Set Z condition code
+    irmovq \$0x80,%rax
     # Test 4 instruction sequence
     $i1
     $i2
     $i3
     $i4
     # Put in another instruction
-    rrmovl %esp,%ebp
+    rrmovq %rsp,%rbp
     # Complete
     halt
 
 .pos 0x08
-     .long pos01
-     .long pos02
-     .long pos03
-     .long pos04
-     .long pos05
-     .long pos06
+     .quad pos01
+     .quad pos02
+     .quad pos03
+     .quad pos04
+     .quad pos05
+     .quad pos06
 pos01:
      halt
 pos02:
@@ -158,12 +154,12 @@ pos06:
      halt
 
 .pos 0x100
-    .long pos11
-    .long pos12
-    .long pos13
-    .long pos14
-    .long pos15
-    .long pos16
+    .quad pos11
+    .quad pos12
+    .quad pos13
+    .quad pos14
+    .quad pos15
+    .quad pos16
 pos11:
     halt
 pos12:
@@ -186,12 +182,12 @@ pos16:
     halt
 
 .pos 0x180
-    .long pos21
-    .long pos22
-    .long pos23
-    .long pos24
-    .long pos25
-    .long pos26
+    .quad pos21
+    .quad pos22
+    .quad pos23
+    .quad pos24
+    .quad pos25
+    .quad pos26
 pos21:
     halt
 pos22:

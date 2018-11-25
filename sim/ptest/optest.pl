@@ -10,8 +10,8 @@ cmdline();
 
 @vals = (0x100, 0x020, 0x004);
 
-@instr = ("rrmovl", "addl", "subl", "andl", "xorl");
-@regs = ("edx", "ebx", "esp");
+@instr = ("rrmovq", "addq", "subq", "andq", "xorq");
+@regs = ("rdx", "rbx", "rsp");
 
 foreach $t (@instr) {
     foreach $ra (@regs) {
@@ -19,8 +19,8 @@ foreach $t (@instr) {
 	    $tname = "op-$t-$ra-$rb";
 	    open (YFILE, ">$tname.ys") || die "Can't write to $tname.ys\n";
 	    print YFILE <<STUFF;
-	      irmovl \$$vals[0], %$ra
-	      irmovl \$$vals[1], %$rb
+	      irmovq \$$vals[0], %$ra
+	      irmovq \$$vals[1], %$rb
 	      nop
 	      nop
 	      nop
@@ -35,17 +35,17 @@ STUFF
     }
 }
 
-if ($testiaddl) {
+if ($testiaddq) {
     foreach $ra (@regs) {
 	foreach $val (@vals) {
-	    $tname = "op-iaddl-$val-$ra";
+	    $tname = "op-iaddq-$val-$ra";
 	    open (YFILE, ">$tname.ys") || die "Can't write to $tname.ys\n";
 	    print YFILE <<STUFF;
-	    irmovl \$$val, %$ra
+	    irmovq \$$val, %$ra
 	    nop
 	    nop
 	    nop
-            iaddl \$-32, %$ra
+            iaddq \$-32, %$ra
 	    nop
 	    nop
 	    halt
@@ -56,26 +56,26 @@ STUFF
     }
 }
 
-@instr = ("pushl", "popl");
-@regs = ("edx", "esp");
+@instr = ("pushq", "popq");
+@regs = ("rdx", "rsp");
 
 foreach $t (@instr) {
     foreach $ra (@regs) {
 	$tname = "op-$t-$ra";
 	open (YFILE, ">$tname.ys") || die "Can't write to $tname.ys\n";
 	print YFILE <<STUFF;
-        irmovl \$0x200,%esp
-	irmovl \$$vals[1], %eax
+        irmovq \$0x200,%rsp
+	irmovq \$$vals[1], %rax
 	nop
 	nop
         nop
-        rmmovl %eax, 0(%esp)
-	irmovl \$$vals[2], %eax
+        rmmovq %rax, 0(%rsp)
+	irmovq \$$vals[2], %rax
 	nop
         nop
         nop
-	rmmovl %eax, -4(%esp)
-	irmovl \$$vals[0], %edx
+	rmmovq %rax, -4(%rsp)
+	irmovq \$$vals[0], %rdx
 	nop
         nop
         nop
@@ -87,29 +87,6 @@ STUFF
 	close YFILE;
 	&run_test($tname);
     }
-}
-
-if ($testleave) {
-    $tname = "op-leave";
-    open (YFILE, ">$tname.ys") || die "Can't write to $tname.ys\n";
-    print YFILE <<STUFF;
-    irmovl \$0x100,%ebp
-    irmovl \$0x123,%eax
-    irmovl \$0xabc,%edx
-    nop
-    nop
-    rmmovl %eax, 0(%ebp)
-    rmmovl %edx, -4(%ebp)
-    nop
-    nop
-    nop
-    leave
-    nop
-    nop
-    halt
-STUFF
-    close YFILE;
-    &run_test($tname);
 }
 
 &test_stat();

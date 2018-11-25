@@ -1,5 +1,5 @@
 This directory contains Perl scripts that provide comprehensive
-regression testing of the different Y86 simulators.  There are four
+regression testing of the different Y86-64 simulators.  There are four
 basic test types, implemented as four different scripts:
 
 	optest.pl:	Tests each individual instruction type
@@ -10,8 +10,7 @@ basic test types, implemented as four different scripts:
 
 Each of the tests has the following optional arguments:
 	-s simfile	Use simfile as simulator (default ../pipe/psim).
-	-i		Test the iaddl instruction
-	-l		Test the leave instruction
+	-i		Test the iaddq instruction
 
 You can use make to run all four test programs.  Options to make include:
 
@@ -19,8 +18,10 @@ You can use make to run all four test programs.  Options to make include:
 	TFLAGS=<any flags you want to give to the testing scripts>
 
 For example, you could say:
-	make SIM=../pipe/psim TFLAGS=-il
-to test the pipeline simulator including both the iaddl and leave instructions.
+	make SIM=../pipe/psim TFLAGS=-i
+to test the pipeline simulator including the iaddq instruction.  (Note that
+this test will fail for the default implementation of pipe, since it does
+not implement the iaddq instruction.)
 
 When the test program detects an erroneous simulation, it leaves the
 .ys file in the directory (ordinarily it deletes the test code it

@@ -19,22 +19,22 @@ foreach $t (@instr) {
 	    $tname = "jf-$t-$va-$vb";
 	    open (YFILE, ">$tname.ys") || die "Can't write to $tname.ys\n";
 	    print YFILE <<STUFF;
-	      irmovl stack, %esp
-	      irmovl \$1, %esi
-	      irmovl \$2, %edi
-	      irmovl \$4, %ebp
-	      irmovl \$$va, %eax
-	      irmovl \$$vb, %edx
-	      subl %edx,%eax
+	      irmovq stack, %rsp
+	      irmovq \$1, %rsi
+	      irmovq \$2, %rdi
+	      irmovq \$4, %rbp
+	      irmovq \$$va, %rax
+	      irmovq \$$vb, %rdx
+	      subq %rdx,%rax
 	      $t target
-	      addl %esi,%eax
-	      addl %edi,%eax
-	      addl %ebp,%eax
+	      addq %rsi,%rax
+	      addq %rdi,%rax
+	      addq %rbp,%rax
               halt
 target:
-	      addl %esi,%edx
-	      addl %edi,%edx
-	      addl %ebp,%edx
+	      addq %rsi,%rdx
+	      addq %rdi,%rdx
+	      addq %rbp,%rdx
               nop
               nop
 	      halt
@@ -54,27 +54,27 @@ foreach $t (@instr) {
 	    $tname = "jb-$t-$va-$vb";
 	    open (YFILE, ">$tname.ys") || die "Can't write to $tname.ys\n";
 	    print YFILE <<STUFF;
-	      irmovl stack, %esp
-	      irmovl \$1, %esi
-	      irmovl \$2, %edi
-	      irmovl \$4, %ebp
-	      irmovl \$$va, %eax
-	      irmovl \$$vb, %edx
+	      irmovq stack, %rsp
+	      irmovq \$1, %rsi
+	      irmovq \$2, %rdi
+	      irmovq \$4, %rbp
+	      irmovq \$$va, %rax
+	      irmovq \$$vb, %rdx
 	      jmp skip
 	      halt
 target:
-	      addl %esi,%edx
-	      addl %edi,%edx
-	      addl %ebp,%edx
+	      addq %rsi,%rdx
+	      addq %rdi,%rdx
+	      addq %rbp,%rdx
               nop
               nop
 	      halt
 skip:
-	      subl %edx,%eax
+	      subq %rdx,%rax
 	      $t target
-	      addl %esi,%eax
-	      addl %edi,%eax
-	      addl %ebp,%eax
+	      addq %rsi,%rax
+	      addq %rdi,%rax
+	      addq %rbp,%rax
               halt
 .pos 0x100
 stack:
@@ -86,29 +86,29 @@ STUFF
 }
 
 
-if ($testiaddl) {
-    # Create set of forward tests using iaddl
+if ($testiaddq) {
+    # Create set of forward tests using iaddq
     foreach $t (@instr) {
 	foreach $va (@vals) {
 	    foreach $vb (@vals) {
 		$tname = "ji-$t-$va-$vb";
 		open (YFILE, ">$tname.ys") || die "Can't write to $tname.ys\n";
 	      print YFILE <<STUFF;
-	      irmovl stack, %esp
-	      irmovl \$1, %esi
-	      irmovl \$2, %edi
-	      irmovl \$4, %ebp
-	      irmovl \$$va, %eax
-	      iaddl \$-$vb,%eax
+	      irmovq stack, %rsp
+	      irmovq \$1, %rsi
+	      irmovq \$2, %rdi
+	      irmovq \$4, %rbp
+	      irmovq \$$va, %rax
+	      iaddq \$-$vb,%rax
 	      $t target
-	      addl %esi,%eax
-	      addl %edi,%eax
-	      addl %ebp,%eax
+	      addq %rsi,%rax
+	      addq %rdi,%rax
+	      addq %rbp,%rax
               halt
 target:
-	      addl %esi,%edx
-	      addl %edi,%edx
-	      addl %ebp,%edx
+	      addq %rsi,%rdx
+	      addq %rdi,%rdx
+	      addq %rbp,%rdx
               nop
               nop
 	      halt

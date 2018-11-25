@@ -12,9 +12,9 @@ cmdline();
 @stateset =
 (
  # Set condition codes
- "andl %ecx,%ecx",
+ "andq %rcx,%rcx",
  # Write to memory
- "rmmovl %ecx,(%eax)"
+ "rmmovq %rcx,(%rax)"
 );
 
 # Exception causing instructions
@@ -25,7 +25,7 @@ cmdline();
  # Invalid instruction
  ".byte 0xFF",
  # Invalid write address
- "rmmovl %eax,0xF0000000(%eax)"
+ "rmmovq %rax,0xF0000000(%rax)"
 );
 
 # Generate test with 3 instructions inserted
@@ -34,9 +34,9 @@ sub gen_test
     local ($i1, $i2, $i3) = @_;
     print YFILE <<STUFF;
     # Preamble.  Initialize memory and registers
-    irmovl \$-1,%ecx    # Create nonzero value
-    irmovl \$0x100,%eax
-    xorl %edx,%edx      # Set Z condition code
+    irmovq \$-1,%rcx    # Create nonzero value
+    irmovq \$0x100,%rax
+    xorq %rdx,%rdx      # Set Z condition code
     # Test 3 instruction sequence
     $i1
     $i2
