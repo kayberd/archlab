@@ -1,4 +1,7 @@
 #/* $begin seq-all-hcl */
+#Victoria Pierce
+#pierc507
+#
 ####################################################################
 #  HCL Description of Control for Single Cycle Y86-64 Processor SEQ   #
 #  Copyright (C) Randal E. Bryant, David R. O'Hallaron, 2010       #
