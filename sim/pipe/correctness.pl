@@ -93,14 +93,14 @@ for ($i = 0; $i <= $blocklen+$over; $i++) {
     if ($usepipe) {
 	!(system "$pipe -v 1 $fname$len.yo > $fname$len.pipe") ||
 	    die "Couldn't simulate file $fname$len.yo with pipeline simulator\n";
-	$stat = `grep "rax:" $fname$len.pipe`;
+	$stat = `grep "eax:" $fname$len.pipe`;
 	!(system "rm $fname$len.ys $fname$len.yo $fname$len.pipe") ||
 	    die "Couldn't remove files $fname$len.ys and/or $fname$len.yo and/or $fname$len.pipe\n";
 	chomp $stat;
     } else {
 	!(system "$yis $fname$len.yo > $fname$len.yis") ||
 	    die "Couldn't simulate file $fname$len.yo with instruction set simulator\n";
-	$stat = `grep rax $fname$len.yis`;
+	$stat = `grep eax $fname$len.yis`;
 	!(system "rm $fname$len.ys $fname$len.yo $fname$len.yis") ||
 	    die "Couldn't remove files $fname$len.ys and/or $fname$len.yo and/or $fname$len.yis\n";
 	chomp $stat;

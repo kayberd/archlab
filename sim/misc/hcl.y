@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 
 %}
 
-%token QUOTE BOOLARG BOOL WORDARG WORD QSTRING
+%token QUOTE BOOLARG BOOL INTARG INT QSTRING
   VAR NUM ASSIGN SEMI COLON COMMA LPAREN RPAREN LBRACE 
   RBRACE LBRACK RBRACK AND OR NOT COMP IN
 
@@ -69,9 +69,9 @@ statements: /* empty */
 statement:
        QUOTE QSTRING                       { insert_code($2); }
        | BOOLARG VAR QSTRING               { add_arg($2, $3, 1); }
-       | WORDARG VAR QSTRING                { add_arg($2, $3, 0); }
+       | INTARG VAR QSTRING                { add_arg($2, $3, 0); }
        | BOOL VAR ASSIGN expr SEMI         { gen_funct($2, $4, 1); }
-       | WORD VAR ASSIGN expr SEMI          { gen_funct($2, $4, 0); }
+       | INT VAR ASSIGN expr SEMI          { gen_funct($2, $4, 0); }
        ;
 
 expr:

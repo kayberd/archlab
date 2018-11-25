@@ -1,4 +1,4 @@
-/* Instruction set simulator for Y86-64 Architecture */
+/* Instruction set simulator for Y86 Architecture */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     for (step = 0; step < max_steps && e == STAT_AOK; step++)
 	e = step_state(s, stdout);
 
-    printf("Stopped in %d steps at PC = 0x%llx.  Status '%s', CC %s\n",
+    printf("Stopped in %d steps at PC = 0x%x.  Status '%s', CC %s\n",
 	   step, s->pc, stat_name(e), cc_name(s->cc));
 
     printf("Changes to registers:\n");

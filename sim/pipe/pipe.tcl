@@ -19,7 +19,7 @@ proc findFlag {flag} {
 }
 
 ##########################################################################
-# Register File Implementation.  Shown as array of 3 X 5                 #
+# Register File Implementation.  Shown as array of 8 columns             #
 ##########################################################################
 
 
@@ -52,10 +52,10 @@ proc setReg {id val highlight} {
 	.r.reg$lastId config -bg $normalBg
 	set lastId -1
     }
-    if {$id < 0 || $id >= 15} {
+    if {$id < 0 || $id >= 8} {
 	error "Invalid Register ($id)"
     }
-    .r.reg$id config -text [format %16x $val]
+    .r.reg$id config -text [format %8x $val]
     if {$highlight} {
 	uplevel .r.reg$id config -bg $specialBg
 	set lastId $id
@@ -105,12 +105,12 @@ pack .cpi.lab -in .cpi -side left
 
 label .cpi.clab -text "Cycles" -font $labFont
 pack .cpi.clab -in .cpi -side left
-label .cpi.cyc -text "0" -width 6 -font $dpyFont -relief ridge -bg $normalBg
+label .cpi.cyc -text "0" -width 4 -font $dpyFont -relief ridge -bg $normalBg
 pack .cpi.cyc -in .cpi -side left
 
 label .cpi.ilab -text "Instructions" -font $labFont
 pack .cpi.ilab -in .cpi -side left
-label .cpi.instr -text "0" -width 6 -font $dpyFont -relief ridge -bg $normalBg
+label .cpi.instr -text "0" -width 4 -font $dpyFont -relief ridge -bg $normalBg
 pack .cpi.instr -in .cpi -side left
 
 label .cpi.cpilab -text "CPI" -font $labFont
@@ -162,8 +162,8 @@ frame .r
 pack .r -in . -side bottom
 # Following give separate window for register file
 # toplevel .r
-# wm title .r "Register File"
-label .r.lab -text "Register File" -font $bigLabFont -height $sectionHeight
+# wm title .r "Register File" -font $bigLabFont
+label .r.lab -text "Register File"  -font $bigLabFont -height $sectionHeight
 pack .r.lab -in .r -side top
 # Set up top row control panel (disabled)
 # frame .r.cntl
@@ -176,35 +176,27 @@ pack .r.lab -in .r -side top
 # button .r.c -text "Clear" -command clearReg -width 6
 # pack .r.labreg .r.regid .r.labval .r.regval .r.doset .r.c  -in .r.cntl -side left
 
-set regnames [list "%rax" "%rcx" "%rdx" "%rbx" "%rsp" "%rbp" "%rsi" "%rdi" "%r8 " "%r9 " "%r10" "%r11" "%r12" "%r13" "%r14" ""]
+set regnames [list "%eax" "%ecx" "%edx" "%ebx" "%esp" "%ebp" "%esi" "%edi"]
 
-# Create rows of register labels and displays
-for {set j 0} {$j < 3} {incr j 1} {
-    frame .r.labels$j
-    pack .r.labels$j -side top -in .r
+# Create Row of Register Labels
+frame .r.labels
+pack .r.labels -side top -in .r
 
-    for {set c 0} {$c < 5} {incr c 1} {
-	set i [expr $j * 5 + $c]
-	label .r.lab$i -width 16 -font $dpyFont -text [lindex $regnames $i]
-	pack .r.lab$i -in .r.labels$j -side left
-    }
+for {set i 0} {$i < 8} {incr i 1} {
+    label .r.lab$i -width 8 -font $dpyFont -text [lindex $regnames $i]
+    pack .r.lab$i -in .r.labels -side left
+}
 
-    # Create Row of Register Entries
-    frame .r.row$j
-    pack .r.row$j -side top -in .r
+# Create Row of Register Entries
+frame .r.row
+pack .r.row -side top -in .r
 
-    # Create 5 registers
-    for {set c 0} {$c < 5} {incr c 1} {
-	set i [expr $j * 5 + $c]
-	if {$i == 15} {
-	    label .r.reg$i -width 16 -font $dpyFont -text ""
-	} else {
-	    label .r.reg$i -width 16 -font $dpyFont -relief ridge \
-		-bg $normalBg
-	}
-	pack .r.reg$i -in .r.row$j -side left
-    }
 
+# Create 8 registers
+for {set i 0} {$i < 8} {incr i 1} {
+    label .r.reg$i -width 8 -font $dpyFont -relief ridge \
+	    -bg $normalBg
+    pack .r.reg$i -in .r.row -side left
 }
 
 
@@ -218,7 +210,7 @@ for {set j 0} {$j < 3} {incr j 1} {
 wm title . $simname
 
 # Control Panel for simulator
-set cntlBW 12
+set cntlBW 9
 frame .cntl
 pack .cntl
 button .cntl.quit -width $cntlBW -text Quit -command exit
@@ -295,7 +287,7 @@ set valaBg LightPink
 set valbBg PaleGreen1
 
 # Overall width of pipe register display
-set pipeWidth 72
+set pipeWidth 55
 set pipeHeight 2
 set labWidth 5
 
@@ -386,50 +378,50 @@ proc ltranspose {inlist} {
 }
 
 # Fields in F display
-# Total size = 3+16 = 19
+# Total size = 3+8 = 11
 set pwins(F) [ltranspose [list [addDisp .p.pc 3 Stat] \
-                                [addDisp .p.pc 16 predPC]]]
+                                [addDisp .p.pc 8 predPC]]]
 
 # Fields in D display
-# Total size = 3+6+4+4+16+16 = 49
+# Total size = 3+6+8+4+4+8 = 33
 set pwins(D) [ltranspose \
            [list [addDisp .p.fd 3 Stat]   \
 	         [addDisp .p.fd 6 Instr] \
 	         [addDisp .p.fd 4 rA] \
 	         [addDisp .p.fd 4 rB] \
-                 [addDisp .p.fd 16 valC] \
-		 [addDisp .p.fd 16 valP]]] 
+                 [addDisp .p.fd 8 valC] \
+		 [addDisp .p.fd 8 valP]]] 
 
 # Fields in E Display
-# Total size = 3+6+16+16+16+4+4+4+4 = 73
+# Total size = 3+6+8+4+8+4+8+4+4 = 49
 set pwins(E) [ltranspose \
            [list [addDisp .p.de 3 Stat] \
 	         [addDisp .p.de 6 Instr] \
-		 [addDisp .p.de 16 valC] \
-		 [addDisp .p.de 16 valA] \
-		 [addDisp .p.de 16 valB] \
+		 [addDisp .p.de 8 valC] \
+		 [addDisp .p.de 8 valA] \
+		 [addDisp .p.de 8 valB] \
 		 [addDisp .p.de 4 dstE] \
 		 [addDisp .p.de 4 dstM] \
 		 [addDisp .p.de 4 srcA] \
 		 [addDisp .p.de 4 srcB]]]
 
 # Fields in M Display
-# Total size = 3+6+3+16+16+4+4 = 52
+# Total size = 3+6+3+4+8+4+8 = 36
 set pwins(M) [ltranspose \
            [list [addDisp .p.em 3 Stat] \
 	         [addDisp .p.em 6 Instr] \
 	         [addDisp .p.em 3 Cnd] \
-		 [addDisp .p.em 16 valE] \
-		 [addDisp .p.em 16 valA] \
+		 [addDisp .p.em 8 valE] \
+		 [addDisp .p.em 8 valA] \
 		 [addDisp .p.em 4 dstE] \
 		 [addDisp .p.em 4 dstM]]]
 # Fields in W display
-# Total size = 3+6+16+16+4+4 = 49
+# Total size = 3+6+4+8+4+8 = 33
 set pwins(W) [ltranspose \
            [list [addDisp .p.mw 3 Stat] \
 	         [addDisp .p.mw 6 Instr] \
-		 [addDisp .p.mw 16 valE] \
-		 [addDisp .p.mw 16 valM] \
+		 [addDisp .p.mw 8 valE] \
+		 [addDisp .p.mw 8 valM] \
 		 [addDisp .p.mw 4 dstE] \
 		 [addDisp .p.mw 4 dstM]]]
 
@@ -511,8 +503,8 @@ proc addCodeLine {line addr op text} {
     global codeFont
     frame .c.tr.$addr
     pack .c.tr.$addr -in .c.tr -side top -anchor w
-    label .c.tr.$addr.a -width 6 -text [format "0x%x" $addr] -font $codeFont
-    label .c.tr.$addr.i -width 20 -text $op -font $codeFont 
+    label .c.tr.$addr.a -width 5 -text [format "0x%x" $addr] -font $codeFont
+    label .c.tr.$addr.i -width 12 -text $op -font $codeFont 
     label .c.tr.$addr.s -width 2 -text "" -font $codeFont -bg white
     label .c.tr.$addr.t -text $text -font $codeFont
     pack .c.tr.$addr.a .c.tr.$addr.i .c.tr.$addr.s \
@@ -559,8 +551,8 @@ pack .m.t -in .m -side top -anchor w
 
 label .m.t.lab -width 6 -font $dpyFont -text "      "
 pack .m.t.lab -in .m.t -side left
-for {set i 0} {$i < 16} {incr i 8} {
-    label .m.t.a$i -width 16 -font $dpyFont -text [format "  0x---%x" [expr $i % 16]]
+for {set i 0} {$i < 16} {incr i 4} {
+    label .m.t.a$i -width 8 -font $dpyFont -text [format "  0x---%x" [expr $i % 16]]
     pack .m.t.a$i -in .m.t -side left
 }
 
@@ -590,9 +582,9 @@ proc createMem {nminAddr nmemCnt} {
 	label .m.e.r$i.lab -width 6 -font $dpyFont -text [format "0x%.3x-"  [expr $addr / 16]]
 	pack .m.e.r$i.lab -in .m.e.r$i -side left
 
-	for {set j 0} {$j < 16} {incr j 8} {
+	for {set j 0} {$j < 16} {incr j 4} {
 	    set a [expr $addr + $j]
-	    label .m.e.v$a -width 16 -font $dpyFont -relief ridge \
+	    label .m.e.v$a -width 8 -font $dpyFont -relief ridge \
                 -bg $normalBg
 	    pack .m.e.v$a -in .m.e.r$i -side left
 	}
@@ -604,7 +596,7 @@ proc setMem {Addr Val} {
     if {$Addr < $minAddr || $Addr > [expr $minAddr + $memCnt]} {
 	error "Memory address $Addr out of range"
     }
-    .m.e.v$Addr config -text [format %16x $Val]
+    .m.e.v$Addr config -text [format %8x $Val]
 }
 
 proc clearMem {} {

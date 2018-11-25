@@ -20,9 +20,9 @@ $verbose = 1;
 ## Grading criteria
 $totalpoints = 60;
 # What CPE is required to get full credit?
-$fullcpe = 7.65;
+$fullcpe = 10.0;
 # What CPE is required to get nonzero credit:
-$threshcpe = 10.5;
+$threshcpe = 12.5;
 
 
 
@@ -77,6 +77,7 @@ for ($i = 0; $i <= $blocklen; $i++) {
 	die "Couldn't assemble file $fname$i.ys\n";
     $stat = `$pipe -v 0 $fname$i.yo` ||
 	die "Couldn't simulate file $fname$i.yo\n";
+#    print $stat;
     !(system "rm $fname$i.ys $fname$i.yo") ||
 	die "Couldn't remove files $fname$i.ys and/or $fname$i.yo\n";
     chomp $stat;

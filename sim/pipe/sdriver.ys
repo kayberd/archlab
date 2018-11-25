@@ -1,102 +1,163 @@
 #######################################################################
 # Test for copying block of size 4;
 #######################################################################
-  .pos 0
-main:  irmovq Stack, %rsp    # Set up stack pointer
+	.pos 0
+main:	irmovl Stack, %esp  	# Set up stack pointer
+	irmovl Stack, %ebp  	# Set up base pointer
 
-  # Set up arguments for copy function and then invoke it
-  irmovq $4, %rdx    # src and dst have 4 elements
-  irmovq dest, %rsi  # dst array
-  irmovq src, %rdi  # src array
-  call ncopy     
-  halt      # should halt with num nonzeros in %rax
+	# Set up arguments for copy function and then invoke it
+	irmovl $4, %eax		# src and dst have 4 elements
+	pushl %eax
+	irmovl dest, %eax	# dst array
+	pushl %eax
+	irmovl src, %eax	# src array
+	pushl %eax
+	call ncopy		 
+	halt			# should halt with num nonzeros in %eax
 StartFun:
 #/* $begin ncopy-ys */
 ##################################################################
-# ncopy.ys - Copy a src block of len words to dst.
-# Return the number of negative words (<0) contained in src.
+# ncopy.ys - Copy a src block of len ints to dst.
+# Return the number of positive ints (>0) contained in src.
 #
 # Include your name and ID here.
 #
 # Describe how and why you modified the baseline code.
-#
+# 1. replace all addl with iaddl;
+# 2. unrolled loop (copy 8 elements each loop);
+# 3. jump to main function directly.
 ##################################################################
 # Do not modify this portion
 # Function prologue.
-# %rdi = src, %rsi = dst, %rdx = len
-ncopy:
+ncopy:	pushl %ebp		# Save old frame pointer
+	rrmovl %esp,%ebp	# Set up new frame pointer
+	pushl %esi		# Save callee-save regs
+	pushl %ebx
+	pushl %edi
+	mrmovl 8(%ebp),%ebx	# src
+	mrmovl 16(%ebp),%edx	# len
+	mrmovl 12(%ebp),%ecx	# dst
 
 ##################################################################
 # You can modify this portion
-  # Loop header
-  xorq %rax,%rax    # count = 0;
-  andq %rdx,%rdx    # len <= 0?
-  jle Done    # if so, goto Done:
-
-Loop:  mrmovq (%rdi), %r10  # read val from src...
-  rmmovq %r10, (%rsi)  # ...and store it to dst
-  andq %r10, %r10    # val > 0?
-  jg Npos    # if so, goto Npos:
-  irmovq $1, %r10
-  addq %r10, %rax    # count++
-Npos:  irmovq $1, %r10
-  subq %r10, %rdx    # len--
-  irmovq $8, %r10
-  addq %r10, %rdi    # src++
-  addq %r10, %rsi    # dst++
-  andq %rdx,%rdx    # len > 0?
-  jg Loop      # if so, goto Loop:
+	# Loop header
+	xorl %eax,%eax			# count = 0;
+	rrmovl %edx, %edi
+	iaddl $-8, %edi
+	jl EleLeft				# if len < 8, goto EleLeft:
+Ele1:	mrmovl (%ebx), %esi	# read val from src...
+	rmmovl %esi, (%ecx)		# ...and store it to dst
+	andl %esi, %esi			# val <= 0?
+	jle Ele2				# if so, goto Ele2:
+	iaddl $1, %eax			# count++
+Ele2:	mrmovl 4(%ebx), %esi# read val from src...
+	rmmovl %esi, 4(%ecx)	# ...and store it to dst
+	andl %esi, %esi			# val <= 0?
+	jle Ele3				# if so, goto Ele3:
+	iaddl $1, %eax			# count++
+Ele3:	mrmovl 8(%ebx), %esi# read val from src...
+	rmmovl %esi, 8(%ecx)	# ...and store it to dst
+	andl %esi, %esi			# val <= 0?
+	jle Ele4				# if so, goto Ele4:
+	iaddl $1, %eax			# count
+Ele4:	mrmovl 12(%ebx), %esi# read val from src...
+	rmmovl %esi, 12(%ecx)	# ...and store it to dst
+	andl %esi, %esi			# val <= 0?
+	jle Ele5				# if so, goto Ele5:
+	iaddl $1, %eax			# count
+Ele5:	mrmovl 16(%ebx), %esi	# read val from src...
+	rmmovl %esi, 16(%ecx)	# ...and store it to dst
+	andl %esi, %esi			# val <= 0?
+	jle Ele6				# if so, goto Ele6:
+	iaddl $1, %eax			# count++
+Ele6:	mrmovl 20(%ebx), %esi# read val from src...
+	rmmovl %esi, 20(%ecx)	# ...and store it to dst
+	andl %esi, %esi			# val <= 0?
+	jle Ele7				# if so, goto Ele7:
+	iaddl $1, %eax			# count++
+Ele7:	mrmovl 24(%ebx), %esi# read val from src...
+	rmmovl %esi, 24(%ecx)	# ...and store it to dst
+	andl %esi, %esi			# val <= 0?
+	jle Ele8				# if so, goto Ele8:
+	iaddl $1, %eax			# count++
+Ele8:	mrmovl 28(%ebx), %esi# read val from src...
+	rmmovl %esi, 28(%ecx)	# ...and store it to Reapt
+	andl %esi, %esi			# val <= 0?
+	jle Reapt				# if so, goto Reapt:
+	iaddl $1, %eax			# count++
+Reapt:
+	iaddl $-8, %edx			# len-=8
+	iaddl $32, %ebx			# src+=8
+	iaddl $32, %ecx			# dst+=8
+	iaddl $-8, %edi
+	jge Ele1					# if len >= 8, goto Ele1:
+EleLeft:andl %edx,%edx		# len <= 0?
+	jle Exit				# if so, goto Done:
+Loop:	mrmovl (%ebx), %esi	# read val from src...
+	rmmovl %esi, (%ecx)		# ...and store it to dst
+	andl %esi, %esi			# val <= 0?
+	jle Npos				# if so, goto Npos:
+	iaddl $1, %eax			# count++
+Npos:	iaddl $4, %ebx			# src++
+	iaddl $4, %ecx			# dst++
+	iaddl $-1, %edx		# len--
+	jg Loop					# if len > 0, goto Loop:
+Exit:	jmp 0x29
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.
 Done:
-  ret
+	popl %edi               # Restore callee-save registers
+	popl %ebx
+	popl %esi
+	rrmovl %ebp, %esp
+	popl %ebp
+	ret
 ##################################################################
 # Keep the following label at the end of your function
 End:
 #/* $end ncopy-ys */
-
 EndFun:
 
 ###############################
 # Source and destination blocks 
 ###############################
-  .align 8
+	.align 4
 src:
-	.quad -1
-	.quad 2
-	.quad -3
-	.quad 4
-  .quad 0xbcdefa # This shouldn't get moved
+	.long -1
+	.long -2
+	.long 3
+	.long 4
+	.long 0xbcdefa # This shouldn't get moved
 
-  .align 16
+	.align 16
 Predest:
-  .quad 0xbcdefa
+	.long 0xbcdefa
 dest:
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
 Postdest:
-  .quad 0xdefabc
+	.long 0xdefabc
 
-.align 8
+.align 4
 # Run time stack
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
-  .quad 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
 
 Stack:

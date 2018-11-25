@@ -42,17 +42,19 @@ extern FILE *outfile;
 static void usage(char *name)
 {
 #ifdef VLOG
-    fprintf(stderr, "Usage: %s [-h] < HCL_file  > verilog_file\n", name);
+    fprintf(stderr, "Usage: %s [-h] < HCL_file  >verilog file\n", name);
+    fprintf(stderr, "Output verilog code on stdout.\n");
 #else
 #ifdef UCLID
-    fprintf(stderr, "Usage: %s [-ah] < HCL_file  > uclid_file\n", name);
-    fprintf(stderr, "   -a     Add define/use annotations\n");
+    fprintf(stderr, "Usage: %s [-ah] < HCL_file  >uclid file\n", name);
+    fprintf(stderr, "Output uclid code on stdout.\n");
 #else /* !UCLID */
-    fprintf(stderr, "Usage: %s [-h][-n NAM] < HCL_file  > C_file\n", name);
+    fprintf(stderr, "Usage: %s [-h] < HCL_file  >C file\n", name);
+    fprintf(stderr, "Output C file on stdout.\n");
+    fprintf(stderr, "   -a     Add define/use annotations\n");
 #endif /* UCLID */
 #endif /* VLOG */
     fprintf(stderr, "   -h     Print this message\n");
-    fprintf(stderr, "   -n NAM Specify processor name\n");
     exit(0);
 }
 
@@ -89,9 +91,9 @@ void init_node(int argc, char **argv)
 #if !defined(VLOG) && !defined(UCLID)
     /* Define and initialize the simulator name */
     if (!strcmp(simname, "")) 
-	printf("char simname[] = \"Y86-64 Processor\";\n");
+	printf("char simname[] = \"Y86 Processor\";\n");
     else
-	printf("char simname[] = \"Y86-64 Processor: %s\";\n", simname);
+	printf("char simname[] = \"Y86 Processor: %s\";\n", simname);
 #endif
     outgen_init(outfile, max_column, first_indent, other_indents);
 }
@@ -359,14 +361,14 @@ static void show_expr_helper(node_ptr expr)
     case N_VAR:
 	len = strlen(expr->sval);
 	if (len + errlen < MAXERRLEN) {
-	    sprintf(expr_buf+errlen, "%s", expr->sval);
+	    sprintf(expr_buf+errlen, expr->sval);
 	    errlen += len;
 	}
 	break;
     case N_NUM:
 	len = strlen(expr->sval);
 	if (len + errlen < MAXERRLEN) {
-	    sprintf(expr_buf+errlen, "%s", expr->sval);
+	    sprintf(expr_buf+errlen, expr->sval);
 	    errlen += len;
 	}
 	break;
@@ -503,7 +505,7 @@ static void gen_expr(node_ptr expr)
     case N_NUM:
 #ifdef UCLID
       {
-	long long int val = atoll(expr->sval);
+	int val = atoi(expr->sval);
 	if (val < -1)
 	  outgen_print("pred^%d(CZERO)", -val);
 	else if (val == -1)
@@ -593,7 +595,7 @@ static void gen_expr(node_ptr expr)
 	  node_ptr last_arg2 = NULL;
 	  for (ele = expr; ele; ele=ele->next) {
 	      outgen_print("      ");
-	      if (ele->arg1->type == N_NUM && atoll(ele->arg1->sval) == 1) {
+	      if (ele->arg1->type == N_NUM && atoi(ele->arg1->sval) == 1) {
 		  outgen_print("default");
 		  last_arg2 = NULL;
 	      }
@@ -620,7 +622,7 @@ static void gen_expr(node_ptr expr)
 	outgen_upindent();
 	int done = 0;
 	for (ele = expr; ele && !done; ele=ele->next) {
-	  if (ele->arg1->type == N_NUM && atoll(ele->arg1->sval) == 1) {
+	  if (ele->arg1->type == N_NUM && atoi(ele->arg1->sval) == 1) {
 	    gen_expr(ele->arg2);
 	    done = 1;
 	  } else {
@@ -670,7 +672,7 @@ void gen_funct(node_ptr var, node_ptr expr, int isbool)
     outgen_terminate();
     outgen_print("    ");
     if (isbool && expr->type == N_NUM) {
-      outgen_print("%d", atoll(var->sval));
+      outgen_print("%d", atoi(var->sval));
     } else
       gen_expr(expr);
     outgen_print(";");
@@ -687,7 +689,7 @@ void gen_funct(node_ptr var, node_ptr expr, int isbool)
     outgen_terminate();
 #else /* !UCLID */
     /* Print function header */
-    outgen_print("long long gen_%s()", var->sval);
+    outgen_print("int gen_%s()", var->sval);
     outgen_terminate();
     outgen_print("{");
     outgen_terminate();

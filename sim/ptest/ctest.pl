@@ -16,12 +16,12 @@ $tcount = 8;
  "||jne target\n\thalt\ntarget:|", # M
  "|||ret",        # R
 
- "||mrmovq (%rax),%rsp|ret", # G1a
- "|mrmovq (%rax),%rsp||ret", # G1b
- "mrmovq (%rax),%rsp|||ret", # G1c
- "||irmovq \$3,%rax|rrmovq %rax,%rdx", # G2a
- "|irmovq \$3,%rax||rrmovq %rax,%rdx", # G2b
- "irmovq \$3,%rax|||rrmovq %rax,%rdx", # G2c
+ "||mrmovl (%eax),%esp|ret", # G1a
+ "|mrmovl (%eax),%esp||ret", # G1b
+ "mrmovl (%eax),%esp|||ret", # G1c
+ "||irmovl \$3,%eax|rrmovl %eax,%edx", # G2a
+ "|irmovl \$3,%eax||rrmovl %eax,%edx", # G2b
+ "irmovl \$3,%eax|||rrmovl %eax,%edx", # G2c
 );
 
 # Try combining two templates to generate test sequence
@@ -69,25 +69,25 @@ sub gen_test
     open(YFILE, ">$tname.ys") || die "Can't write to $tname.ys\n";
 	 
     print YFILE <<STUFF;
-	irmovq Stack1,%rsp
-	irmovq rtnpt,%rdx
-	rmmovq %rdx,(%rsp)   # Put return point on top of Stack1
-	irmovq Stack2,%rax
-	rmmovq %rsp,(%rax)   # Put Stack1 on top of Stack2
-	irmovq Stack3,%rsp   # Point to Stack3
-        pushq %rdx
-        rrmovq %rsp,%rbp
-	irmovq \$3,%rdx       # Initialize
-	xorq   %rbx,%rbx     # Set condition codes to ZF=1,SF=0,OF=0
+	irmovl Stack1,%esp
+	irmovl rtnpt,%edx
+	rmmovl %edx,(%esp)   # Put return point on top of Stack1
+	irmovl Stack2,%eax
+	rmmovl %esp,(%eax)   # Put Stack1 on top of Stack2
+	irmovl Stack3,%esp   # Point to Stack3
+        pushl %edx
+        rrmovl %esp,%ebp
+	irmovl \$3,%edx       # Initialize
+	xorl   %ebx,%ebx     # Set condition codes to ZF=1,SF=0,OF=0
 #       Here's where the 4 instruction sequence goes
         $i1
         $i2
         $i3
         $i4
 #	Now finish things off
-	irmovq \$3,%rbx       # Not reached when sequence ends with ret
+	irmovl \$3,%ebx       # Not reached when sequence ends with ret
 	halt                  # 
-rtnpt:  irmovq \$5,%rsi       # Return point
+rtnpt:  irmovl \$5,%esi       # Return point
 	halt
 .pos 0x60
 	Stack1:

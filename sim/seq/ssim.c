@@ -1,8 +1,8 @@
 /***********************************************************************
  *
- * ssim.c - Sequential Y86-64 simulator
+ * ssim.c - Sequential Y86 simulator
  * 
- * Copyright (c) 2002, 2015. Bryant and D. O'Hallaron, All rights reserved.
+ * Copyright (c) 2002, R. Bryant and D. O'Hallaron, All rights reserved.
  * May not be used, modified, or copied without permission.
  ***********************************************************************/ 
 
@@ -15,6 +15,8 @@
 #include "sim.h"
 
 #define MAXBUF 1024
+
+#define USE_INTERP_RESULT
 
 #ifdef HAS_GUI
 #include <tk.h>
@@ -40,7 +42,7 @@ int gui_mode = FALSE;    /* Run in GUI mode instead of TTY mode? (-g) */
 char *object_filename;   /* The input object file name. */
 FILE *object_file;       /* Input file handle */
 bool_t verbosity = 2;    /* Verbosity level [TTY only] (-v) */ 
-word_t instr_limit = 10000; /* Instruction limit [TTY only] (-l) */
+int instr_limit = 10000; /* Instruction limit [TTY only] (-l) */
 bool_t do_check = FALSE; /* Test with YIS? [TTY only] (-t) */
 
 /************* 
@@ -89,7 +91,7 @@ int sim_main(int argc, char **argv)
 	    usage(argv[0]);
 	    break;
 	case 'l':
-	    instr_limit = atoll(optarg);
+	    instr_limit = atoi(optarg);
 	    break;
 	case 'v':
 	    verbosity = atoi(optarg);
@@ -192,10 +194,10 @@ int sim_main(int argc, char **argv)
  */
 static void run_tty_sim() 
 {
-    word_t icount = 0;
+    int icount = 0;
     status = STAT_AOK;
     cc_t result_cc = 0;
-    word_t byte_cnt = 0;
+    int byte_cnt = 0;
     mem_t mem0, reg0;
     state_ptr isa_state = NULL;
 
@@ -218,7 +220,7 @@ static void run_tty_sim()
 	fprintf(stderr, "No lines of code found\n");
 	exit(1);
     } else if (verbosity >= 2) {
-	printf("%lld bytes of code read\n", byte_cnt);
+	printf("%d bytes of code read\n", byte_cnt);
     }
     fclose(object_file);
     if (do_check) {
@@ -236,7 +238,7 @@ static void run_tty_sim()
 
     icount = sim_run(instr_limit, &status, &result_cc);
     if (verbosity > 0) {
-	printf("%lld instructions executed\n", icount);
+	printf("%d instructions executed\n", icount);
 	printf("Status = %s\n", stat_name(status));
 	printf("Condition Codes: %s\n", cc_name(result_cc));
 	printf("Changed Register State:\n");
@@ -293,7 +295,7 @@ static void usage(char *name)
     printf("file.yo required in GUI mode, optional in TTY mode (default stdin)\n");
     printf("   -h     Print this message\n");
     printf("   -g     Run in GUI mode instead of TTY mode (default TTY)\n");  
-    printf("   -l m   Set instruction limit to m [TTY mode only] (default %lld)\n", instr_limit);
+    printf("   -l m   Set instruction limit to m [TTY mode only] (default %d)\n", instr_limit);
     printf("   -v n   Set verbosity level to 0 <= n <= 2 [TTY mode only] (default %d)\n", verbosity);
     printf("   -t     Test result against ISA simulator (yis) [TTY mode only]\n");
     exit(0);
@@ -313,8 +315,8 @@ static void usage(char *name)
  * Variables related to hardware units in the processor
  */
 mem_t mem;  /* Instruction and data memory */
-word_t minAddr = 0;
-word_t memCnt = 0;
+int minAddr = 0;
+int memCnt = 0;
 
 /* Other processor state */
 mem_t reg;               /* Register file */
@@ -377,26 +379,26 @@ byte_t status = STAT_AOK;
 
 
 /* Values computed by control logic */
-word_t gen_pc();  /* SEQ+ */
-word_t gen_icode();
-word_t gen_ifun();
-word_t gen_need_regids();
-word_t gen_need_valC();
-word_t gen_instr_valid();
-word_t gen_srcA();
-word_t gen_srcB();
-word_t gen_dstE();
-word_t gen_dstM();
-word_t gen_aluA();
-word_t gen_aluB();
-word_t gen_alufun();
-word_t gen_set_cc();
-word_t gen_mem_addr();
-word_t gen_mem_data();
-word_t gen_mem_read();
-word_t gen_mem_write();
-word_t gen_Stat();
-word_t gen_new_pc();
+int gen_pc();  /* SEQ+ */
+int gen_icode();
+int gen_ifun();
+int gen_need_regids();
+int gen_need_valC();
+int gen_instr_valid();
+int gen_srcA();
+int gen_srcB();
+int gen_dstE();
+int gen_dstM();
+int gen_aluA();
+int gen_aluB();
+int gen_alufun();
+int gen_set_cc();
+int gen_mem_addr();
+int gen_mem_data();
+int gen_mem_read();
+int gen_mem_write();
+int gen_Stat();
+int gen_new_pc();
 
 /* Log file */
 FILE *dumpfile = NULL;
@@ -417,12 +419,12 @@ static char digits[16] =
 /* Create string in hex/oct/binary format with leading zeros */
 /* bpd denotes bits per digit  Should be in range 1-4,
    bpw denotes bits per word.*/
-void wstring(uword_t x, int bpd, int bpw, char *str)
+void wstring(unsigned x, int bpd, int bpw, char *str)
 {
     int digit;
-    uword_t mask = ((uword_t) 1 << bpd) - 1;
+    unsigned mask = (1 << bpd) - 1;
     for (digit = (bpw-1)/bpd; digit >= 0; digit--) {
-	uword_t val = (x >> (digit * bpd)) & mask;
+	unsigned val = (x >> (digit * bpd)) & mask;
 	*str++ = digits[val];
     }
     *str = '\0';
@@ -434,12 +436,12 @@ static char status_msg[128];
 /* SEQ+ */
 static char *format_prev()
 {
-    char istring[17];
-    char mstring[17];
-    char pstring[17];
-    wstring(prev_valc, 4, 64, istring);
-    wstring(prev_valm, 4, 64, mstring);
-    wstring(prev_valp, 4, 64, pstring);
+    char istring[9];
+    char mstring[9];
+    char pstring[9];
+    wstring(prev_valc, 4, 32, istring);
+    wstring(prev_valm, 4, 32, mstring);
+    wstring(prev_valp, 4, 32, pstring);
     sprintf(status_msg, "%c %s %s %s %s",
 	    prev_bcond ? 'Y' : 'N',
 	    iname(HPACK(prev_icode, prev_ifun)),
@@ -450,18 +452,18 @@ static char *format_prev()
 
 static char *format_pc()
 {
-    char pstring[17];
-    wstring(pc, 4, 64, pstring);
+    char pstring[9];
+    wstring(pc, 4, 32, pstring);
     sprintf(status_msg, "%s", pstring);
     return status_msg;
 }
 
 static char *format_f()
 {
-    char valcstring[17];
-    char valpstring[17];
-    wstring(valc, 4, 64, valcstring);
-    wstring(valp, 4, 64, valpstring);
+    char valcstring[9];
+    char valpstring[9];
+    wstring(valc, 4, 32, valcstring);
+    wstring(valp, 4, 32, valpstring);
     sprintf(status_msg, "%s %s %s %s %s", 
 	    iname(HPACK(icode, ifun)),
 	    reg_name(ra),
@@ -473,10 +475,10 @@ static char *format_f()
 
 static char *format_d()
 {
-    char valastring[17];
-    char valbstring[17];
-    wstring(vala, 4, 64, valastring);
-    wstring(valb, 4, 64, valbstring);
+    char valastring[9];
+    char valbstring[9];
+    wstring(vala, 4, 32, valastring);
+    wstring(valb, 4, 32, valbstring);
     sprintf(status_msg, "%s %s %s %s %s %s",
 	    valastring,
 	    valbstring,
@@ -490,8 +492,8 @@ static char *format_d()
 
 static char *format_e()
 {
-    char valestring[17];
-    wstring(vale, 4, 64, valestring);
+    char valestring[9];
+    wstring(vale, 4, 32, valestring);
     sprintf(status_msg, "%c %s",
 	    bcond ? 'Y' : 'N',
 	    valestring);
@@ -500,16 +502,16 @@ static char *format_e()
 
 static char *format_m()
 {
-    char valmstring[17];
-    wstring(valm, 4, 64, valmstring);
+    char valmstring[9];
+    wstring(valm, 4, 32, valmstring);
     sprintf(status_msg, "%s", valmstring);
     return status_msg;
 }
 
 static char *format_npc()
 {
-    char npcstring[17];
-    wstring(pc_in, 4, 64, npcstring);
+    char npcstring[9];
+    wstring(pc_in, 4, 32, npcstring);
     sprintf(status_msg, "%s", npcstring);
     return status_msg;
 }
@@ -563,7 +565,7 @@ void sim_reset()
 #ifdef HAS_GUI
     if (gui_mode) {
 	signal_register_clear();
-	create_memory_display();
+	create_memory_display(minAddr, memCnt);
 	sim_report();
     }
 #endif
@@ -634,17 +636,17 @@ static void update_state()
     if (mem_write) {
       /* Should have already tested this address */
       set_word_val(mem, mem_addr, mem_data);
-	sim_log("Wrote 0x%llx to address 0x%llx\n", mem_data, mem_addr);
+	sim_log("Wrote 0x%x to address 0x%x\n", mem_data, mem_addr);
 #ifdef HAS_GUI
 	    if (gui_mode) {
-		if (mem_addr % 8 != 0) {
+		if (mem_addr % 4 != 0) {
 		    /* Just did a misaligned write.
 		       Need to display both words */
 		    word_t align_addr = mem_addr & ~0x3;
 		    word_t val;
 		    get_word_val(mem, align_addr, &val);
 		    set_memory(align_addr, val);
-		    align_addr+=8;
+		    align_addr+=4;
 		    get_word_val(mem, align_addr, &val);
 		    set_memory(align_addr, val);
 		} else {
@@ -675,7 +677,7 @@ static byte_t sim_step()
     instr = HPACK(I_NOP, F_NONE);
     imem_error = !get_byte_val(mem, valp, &instr);
     if (imem_error) {
-	sim_log("Couldn't fetch at address 0x%llx\n", valp);
+	sim_log("Couldn't fetch at address 0x%x\n", valp);
     }
     imem_icode = HI4(instr);
     imem_ifun = LO4(instr);
@@ -692,7 +694,7 @@ static byte_t sim_step()
 	    ra = REG_NONE;
 	    rb = REG_NONE;
 	    status = STAT_ADR;
-	    sim_log("Couldn't fetch at address 0x%llx\n", valp);
+	    sim_log("Couldn't fetch at address 0x%x\n", valp);
 	}
 	valp++;
     } else {
@@ -705,13 +707,13 @@ static byte_t sim_step()
 	} else {
 	    valc = 0;
 	    status = STAT_ADR;
-	    sim_log("Couldn't fetch at address 0x%llx\n", valp);
+	    sim_log("Couldn't fetch at address 0x%x\n", valp);
 	}
-	valp+=8;
+	valp+=4;
     } else {
 	valc = 0;
     }
-    sim_log("IF: Fetched %s at 0x%llx.  ra=%s, rb=%s, valC = 0x%llx\n",
+    sim_log("IF: Fetched %s at 0x%x.  ra=%s, rb=%s, valC = 0x%x\n",
 	    iname(HPACK(icode,ifun)), pc, reg_name(ra), reg_name(rb), valc);
 
     if (status == STAT_AOK && icode == I_HALT) {
@@ -754,7 +756,7 @@ static byte_t sim_step()
     if (gen_mem_read()) {
       dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
       if (dmem_error) {
-	sim_log("Couldn't read at address 0x%llx\n", mem_addr);
+	sim_log("Couldn't read at address 0x%x\n", mem_addr);
       }
     } else
       valm = 0;
@@ -792,9 +794,9 @@ static byte_t sim_step()
   if statusp nonnull, then will be set to status of final instruction
   if ccp nonnull, then will be set to condition codes of final instruction
 */
-word_t sim_run(word_t max_instr, byte_t *statusp, cc_t *ccp)
+int sim_run(int max_instr, byte_t *statusp, cc_t *ccp)
 {
-    word_t icount = 0;
+    int icount = 0;
     byte_t run_status = STAT_AOK;
     while (icount < max_instr) {
 	run_status = sim_step();
@@ -839,6 +841,10 @@ void sim_log( const char *format, ... ) {
 /**********************
  * Begin Part 3 globals	
  **********************/
+
+/* Hack for SunOS */
+extern int matherr();
+int *tclDummyMathPtr = (int *) matherr;
 
 static char tcl_msg[256];
 
@@ -889,7 +895,7 @@ int simLoadCodeCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[])
 {
     FILE *object_file;
-    word_t code_count;
+    int code_count;
     sim_interp = interp;
     if (argc != 2) {
 	interp->result = "One argument required";
@@ -904,7 +910,7 @@ int simLoadCodeCmd(ClientData clientData, Tcl_Interp *interp,
     sim_reset();
     code_count = load_mem(mem, object_file, 0);
     post_load_mem = copy_mem(mem);
-    sprintf(tcl_msg, "%lld", code_count);
+    sprintf(tcl_msg, "%d", code_count);
     interp->result = tcl_msg;
     fclose(object_file);
     return TCL_OK;
@@ -914,7 +920,7 @@ int simLoadDataCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[])
 {
     FILE *data_file;
-    word_t word_count = 0;
+    int word_count = 0;
     interp->result = "Not implemented";
     return TCL_ERROR;
 
@@ -930,7 +936,7 @@ int simLoadDataCmd(ClientData clientData, Tcl_Interp *interp,
 	interp->result = tcl_msg;
 	return TCL_ERROR;
     }
-    sprintf(tcl_msg, "%lld", word_count);
+    sprintf(tcl_msg, "%d", word_count);
     interp->result = tcl_msg;
     fclose(data_file);
     return TCL_OK;
@@ -940,7 +946,7 @@ int simLoadDataCmd(ClientData clientData, Tcl_Interp *interp,
 int simRunCmd(ClientData clientData, Tcl_Interp *interp,
 	      int argc, char *argv[])
 {
-    word_t step_limit = 1;
+    int step_limit = 1;
     byte_t run_status;
     cc_t cc;
     sim_interp = interp;
@@ -949,7 +955,7 @@ int simRunCmd(ClientData clientData, Tcl_Interp *interp,
 	return TCL_ERROR;
     }
     if (argc >= 2 &&
-	(sscanf(argv[1], "%lld", &step_limit) != 1 ||
+	(sscanf(argv[1], "%d", &step_limit) != 1 ||
 	 step_limit < 0)) {
 	sprintf(tcl_msg, "Cannot run for '%s' cycles!", argv[1]);
 	interp->result = tcl_msg;
@@ -984,7 +990,7 @@ void addAppCommands(Tcl_Interp *interp)
 /* Provide mechanism for simulator to update register display */
 void signal_register_update(reg_id_t r, word_t val) {
     int code;
-    sprintf(tcl_msg, "setReg %d %lld 1", (int) r, (word_t) val);
+    sprintf(tcl_msg, "setReg %d %d 1", (int) r, (int) val);
     code = Tcl_Eval(sim_interp, tcl_msg);
     if (code != TCL_OK) {
 	fprintf(stderr, "Failed to signal register set\n");
@@ -995,21 +1001,21 @@ void signal_register_update(reg_id_t r, word_t val) {
 /* Provide mechanism for simulator to generate memory display */
 void create_memory_display() {
     int code;
-    sprintf(tcl_msg, "createMem %lld %lld", minAddr, memCnt);
+    sprintf(tcl_msg, "createMem %d %d", minAddr, memCnt);
     code = Tcl_Eval(sim_interp, tcl_msg);
     if (code != TCL_OK) {
 	fprintf(stderr, "Command '%s' failed\n", tcl_msg);
 	fprintf(stderr, "Error Message was '%s'\n", sim_interp->result);
     } else {
-	word_t i;
-	for (i = 0; i < memCnt && code == TCL_OK; i+=8) {
-	    word_t addr = minAddr+i;
-	    word_t val;
+	int i;
+	for (i = 0; i < memCnt && code == TCL_OK; i+=4) {
+	    int addr = minAddr+i;
+	    int val;
 	    if (!get_word_val(mem, addr, &val)) {
 		fprintf(stderr, "Out of bounds memory display\n");
 		return;
 	    }
-	    sprintf(tcl_msg, "setMem %lld %lld", addr, val);
+	    sprintf(tcl_msg, "setMem %d %d", addr, val);
 	    code = Tcl_Eval(sim_interp, tcl_msg);
 	}
 	if (code != TCL_OK) {
@@ -1020,20 +1026,20 @@ void create_memory_display() {
 }
 
 /* Provide mechanism for simulator to update memory value */
-void set_memory(word_t addr, word_t val) {
+void set_memory(int addr, int val) {
     int code;
-    word_t nminAddr = minAddr;
-    word_t nmemCnt = memCnt;
+    int nminAddr = minAddr;
+    int nmemCnt = memCnt;
 
     /* First see if we need to expand memory range */
     if (memCnt == 0) {
 	nminAddr = addr;
-	memCnt = 8;
+	memCnt = 4;
     } else if (addr < minAddr) {
 	nminAddr = addr;
 	nmemCnt = minAddr + memCnt - addr;
     } else if (addr >= minAddr+memCnt) {
-	nmemCnt = addr-minAddr+8;
+	nmemCnt = addr-minAddr+4;
     }
     /* Now make sure nminAddr & nmemCnt are multiples of 16 */
     nmemCnt = ((nminAddr & 0xF) + nmemCnt + 0xF) & ~0xF;
@@ -1044,10 +1050,10 @@ void set_memory(word_t addr, word_t val) {
 	memCnt = nmemCnt;
 	create_memory_display();
     } else {
-	sprintf(tcl_msg, "setMem %lld %lld", addr, val);
+	sprintf(tcl_msg, "setMem %d %d", addr, val);
 	code = Tcl_Eval(sim_interp, tcl_msg);
 	if (code != TCL_OK) {
-	    fprintf(stderr, "Couldn't set memory value 0x%llx to 0x%llx\n",
+	    fprintf(stderr, "Couldn't set memory value 0x%x to 0x%x\n",
 		    addr, val);
 	    fprintf(stderr, "Error Message was '%s'\n", sim_interp->result);
 	}
@@ -1081,12 +1087,12 @@ void signal_register_clear() {
    read in
 */
 
-void report_line(word_t line_no, word_t addr, char *hex, char *text) {
+void report_line(int line_no, int addr, char *hex, char *text) {
     int code;
-    sprintf(tcl_msg, "addCodeLine %lld %lld {%s} {%s}", line_no, addr, hex, text);
+    sprintf(tcl_msg, "addCodeLine %d %d {%s} {%s}", line_no, addr, hex, text);
     code = Tcl_Eval(sim_interp, tcl_msg);
     if (code != TCL_OK) {
-	fprintf(stderr, "Failed to report code line 0x%llx\n", addr);
+	fprintf(stderr, "Failed to report code line 0x%x\n", addr);
 	fprintf(stderr, "Error Message was '%s'\n", sim_interp->result);
     }
 }
@@ -1094,16 +1100,16 @@ void report_line(word_t line_no, word_t addr, char *hex, char *text) {
 
 /* Provide mechanism for simulator to report which instruction
    is being executed */
-void report_pc(word_t pc)
+void report_pc(unsigned pc)
 {
     int t_status;
-    char addr[18];
-    char code[20];
+    char addr[10];
+    char code[12];
     Tcl_DString cmd;
     Tcl_DStringInit(&cmd);
     Tcl_DStringAppend(&cmd, "simLabel ", -1);
     Tcl_DStringStartSublist(&cmd);
-    sprintf(addr, "%llu", pc);
+    sprintf(addr, "%u", pc);
     Tcl_DStringAppendElement(&cmd, addr);
 
     Tcl_DStringEndSublist(&cmd);

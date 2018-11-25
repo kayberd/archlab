@@ -1,7 +1,7 @@
 /***********************************************************************
- * Pipelined Y86-64 Simulator
+ * Pipelined Y86 Simulator
  *
- * Copyright (c) 2002, 2010, 2015 R. Bryant and D. O'Hallaron,
+ * Copyright (c) 2002, 2010, R. Bryant and D. O'Hallaron,
  * All rights reserved.
  * May not be used, modified, or copied without permission.
  ***********************************************************************/ 
@@ -20,14 +20,14 @@ different HCL files when working on the different homework problems.
 Binary	VERSION		HCL File	  Description
 psim	std		pipe-std.hcl	  Standard simulator (default)
 psim	broken		pipe-broken.hcl   Does not handle any hazards
-psim	full		pipe-full.hcl	  For adding iaddq
+psim	full		pipe-full.hcl	  For adding iaddl and leave
 psim	nobypass	pipe-nobypass.hcl For implementing PIPE-
 					  (called pipe-stall.hcl in text)
 psim	lf		pipe-lf.hcl	  For implementing load forwarding
 psim	nt		pipe-nt.hcl	  For implementing NT branch prediction
 psim	btfnt		pipe-btfnt.hcl	  For implementing BTFNT branch pred.
 psim	1w		pipe-1w.hcl	  For implementing single write port
-psim	super		pipe-super.hcl	  Implements iaddq & load forwarding
+
 
 The Makefile can be configured to build simulators that support GUI
 and/or TTY interfaces. A simulator running in TTY mode prints all
@@ -58,7 +58,7 @@ would then make the pipe-full.hcl version of PIPE.
 2. Using the simulators
 ***********************
 
-The simulator recognizes the following command line arguments:
+The simulator recognize the following command line arguments:
 
 Usage: psim [-htg] [-l m] [-v n] file.yo
 
@@ -121,7 +121,7 @@ pipe-broken.hcl		A simulator that does not detect or handle hazards
 * HCL files for various CS:APP Homework Problems
 pipe-nobypass.hcl	4.51: Build version of PIPE without bypassing 
 			(called pipe-stall.hcl in the text)
-pipe-full.hcl		4.52-53: Add iaddq instruction to PIPE
+pipe-full.hcl		4.52-53: Add iaddl and leave instructions to PIPE
 pipe-nt.hcl		4.54: Implement branch not taken strategy
 pipe-btfnt.hcl		4.55: Implement back-taken forward-not-taken strategy
 pipe-lf.hcl		4.56: Implement load forwarding logic
@@ -134,7 +134,6 @@ pipe-nt-ans.hcl		4.54 solution
 pipe-btfnt-ans.hcl	4.55 solution
 pipe-lf-ans.hcl		4.56 solutions
 pipe-1w-ans.hcl		4.57 solutions
-pipe-super.hcl		Gives best performance for lab
 
 *****************************
 * PIPE simulator source files

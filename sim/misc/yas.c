@@ -1,4 +1,7 @@
-/* Assembler for Y86-64 instruction set */
+/* Assembler for Y86 instruction set */
+/* If want to enable code generation for > 4096 bytes, compile
+   with flag -DBIG_MEM
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +14,7 @@ void add_symbol(char *, int);
 int find_symbol(char *);
 int instr_size(char *);
 
+/* YIS never runs in GUI mode */
 int gui_mode = 0;
 
 FILE *outfile;
@@ -41,7 +45,7 @@ typedef enum{ TOK_IDENT, TOK_NUM, TOK_REG, TOK_INSTR, TOK_PUNCT, TOK_ERR }
 /* Token representation */
 typedef struct {
     char *sval; /* String    */
-    word_t ival;   /* Integer   */
+    int ival;   /* Integer   */
     char cval;  /* Character */
     token_t type; /* Type    */
 } token_rec, *token_ptr;
@@ -73,7 +77,7 @@ void save_line(char *s)
 }
 
 /* Information about current instruction being generated */
-char code[10];     /* Byte encoding */
+char code[6];     /* Byte encoding */
 int codepos = 0;  /* Current position in byte encoding */
 int bcount = 0;   /* Length of current instruction */
 
@@ -90,7 +94,7 @@ void print_token(FILE *out, token_ptr t)
 	fprintf(out, "%s]", t->sval);
 	break;
     case TOK_NUM:
-	fprintf(out, "%lld]", t->ival);
+	fprintf(out, "%d]", t->ival);
 	break;
     case TOK_PUNCT:
 	fprintf(out, "%c]", t->cval);
@@ -119,7 +123,7 @@ void print_instruction(FILE *out)
 
 /* Write len least significant hex digits of value at dest.
    Don't null terminate */
-static void hexstuff(char *dest, word_t value, int len)
+static void hexstuff(char *dest, int value, int len)
 {
     int i;
     for (i = 0; i < len; i++) {
@@ -132,46 +136,41 @@ static void hexstuff(char *dest, word_t value, int len)
 
 void print_code(FILE *out, int pos)
 {
-    char outstring[33];
-    if (pos > 0xFFF) {
-	/* Printing format:
-	   0xHHHH: cccccccccccccccccccc | <line>
-	   where HHHH is address
-	   cccccccccccccccccccc is code
-	*/
-	if (tcount) {
-	    int i;
-	    if (pos > 0xFFFF) {
-		fail("Code address limit exceeded");
-		exit(1);
-	    }
-	    strcpy(outstring, "0x0000:                      | ");
-	    hexstuff(outstring+2, pos, 4);
-	    for (i = 0; i < bcount; i++)
-		hexstuff(outstring+7+2*i, code[i]&0xFF, 2);
-	}
-	else
-	    strcpy(outstring, "                             | ");
-    } else {
-	/* Printing format:
-	   0xHHH: cccccccccccccccccccc | <line>
-	   where HHH is address
-	   cccccccccccccccccccc is code
-	*/
-	if (tcount) {
-	    int i;
-	    if (pos > 0xFFF) {
-		fail("Code address limit exceeded");
-		exit(1);
-	    }
-	    strcpy(outstring, "0x000:                      | ");
-	    hexstuff(outstring+2, pos, 3);
-	    for (i = 0; i < bcount; i++)
-		hexstuff(outstring+7+2*i, code[i]&0xFF, 2);
-	}
-	else
-	    strcpy(outstring, "                            | ");
+#ifdef BIG_MEM
+    /* Printing format:
+       0xHHHH: cccccccccccc | <line>
+       where HHHH is address
+       cccccccccccc is code
+    */
+    char outstring[27];
+    if (tcount) {
+	int i;
+	strcpy(outstring, "  0x0000:              | ");
+	hexstuff(outstring+4, pos, 4);
+	for (i = 0; i < bcount; i++)
+	    hexstuff(outstring+9+2*i, code[i]&0xFF, 2);
     }
+    else
+	strcpy(outstring, "                       | ");
+#else /* BIG_MEM */
+    /* Printing format:
+       0xHHH: cccccccccccc | <line>
+       where HHH is address
+       cccccccccccc is code
+    */
+    char outstring[26];
+    if (tcount) {
+	int i;
+	strcpy(outstring, "  0x000:              | ");
+	hexstuff(outstring+4, pos, 3);
+	for (i = 0; i < bcount; i++)
+	    hexstuff(outstring+9+2*i, code[i]&0xFF, 2);
+    }
+    else
+	strcpy(outstring, "                      | ");
+
+#endif /* BIG_MEM */
+
     if (vcode) {
       fprintf(out, "//%s%s\n", outstring, input_line);
       if (tcount) {
@@ -226,7 +225,7 @@ void get_reg(int codepos, int hi)
 /* Offset indicates value to subtract from number (for PC relative) */
 void get_num(int codepos, int bytes, int offset)
 {
-    word_t val = 0;
+    int val = 0;
     int i;
     if (tokens[tpos].type == TOK_NUM) {
 	val = tokens[tpos].ival;
@@ -255,7 +254,7 @@ void get_num(int codepos, int bytes, int offset)
 void get_mem(int codepos)
 {
     char rval = REG_NONE;
-    word_t val = 0;
+    int val = 0;
     int i;
     char c;
     token_t type = tokens[tpos].type;
@@ -286,7 +285,7 @@ void get_mem(int codepos)
     }
     c = (code[codepos] & 0xF0) | (rval & 0xF);
     code[codepos++] = c;
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 4; i++)
 	code[codepos+i] = (val >> (i*8)) & 0xFF;
 }
 
@@ -442,7 +441,7 @@ void finish_line()
     start_line();
 }
 
-void add_token(token_t type, char *s, word_t i, char c)
+void add_token(token_t type, char *s, int i, char c)
 {
     char *t = NULL;
     if (!tcount)
@@ -482,7 +481,7 @@ void add_reg(char *s)
     add_token(TOK_REG, s, 0, ' ');
 }
 
-void add_num(long long i)
+void add_num(int i)
 {
     add_token(TOK_NUM, NULL, i, ' ');
 }
@@ -620,6 +619,3 @@ int main(int argc, char *argv[])
     return hit_error;
 }
 
-unsigned long long atollh(const char *p) {
-    return strtoull(p, (char **) NULL, 16);
-}

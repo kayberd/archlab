@@ -52,10 +52,10 @@ proc setReg {id val highlight} {
 	.r.reg$lastId config -bg $normalBg
 	set lastId -1
     }
-    if {$id < 0 || $id >= 15} {
+    if {$id < 0 || $id >= 8} {
 	error "Invalid Register ($id)"
     }
-    .r.reg$id config -text [format %16x $val]
+    .r.reg$id config -text [format %8x $val]
     if {$highlight} {
 	uplevel .r.reg$id config -bg $specialBg
 	set lastId $id
@@ -143,36 +143,29 @@ pack .r.lab -in .r -side top
 # button .r.c -text "Clear" -command clearReg -width 6
 # pack .r.labreg .r.regid .r.labval .r.regval .r.doset .r.c  -in .r.cntl -side left
 
-set regnames [list "%rax" "%rcx" "%rdx" "%rbx" "%rsp" "%rbp" "%rsi" "%rdi" "%r8 " "%r8 " "%r10" "%r11" "%r12" "%r13" "%r14" ""]
+set regnames [list "%eax" "%ecx" "%edx" "%ebx" "%esp" "%ebp" "%esi" "%edi"]
 
-# Create rows of register labels and displays
-for {set j 0} {$j < 3} {incr j 1} {
-    frame .r.labels$j
-    pack .r.labels$j -side top -in .r
+# Create Row of Register Labels
+frame .r.labels
+pack .r.labels -side top -in .r
 
-    for {set c 0} {$c < 5} {incr c 1} {
-	set i [expr $j * 5 + $c]
-	label .r.lab$i -width 16 -font $dpyFont -text [lindex $regnames $i]
-	pack .r.lab$i -in .r.labels$j -side left
-    }
-
-    # Create Row of Register Entries
-    frame .r.row$j
-    pack .r.row$j -side top -in .r
-
-    # Create 5 registers
-    for {set c 0} {$c < 5} {incr c 1} {
-	set i [expr $j * 5 + $c]
-	if {$i == 15} {
-	    label .r.reg$i -width 16 -font $dpyFont -text ""
-	} else {
-	    label .r.reg$i -width 16 -font $dpyFont -relief ridge \
-		-bg $normalBg
-	}
-	pack .r.reg$i -in .r.row$j -side left
-    }
-
+for {set i 0} {$i < 8} {incr i 1} {
+    label .r.lab$i -width 8 -font $dpyFont -text [lindex $regnames $i]
+    pack .r.lab$i -in .r.labels -side left
 }
+
+# Create Row of Register Entries
+frame .r.row
+pack .r.row -side top -in .r
+
+
+# Create 8 registers
+for {set i 0} {$i < 8} {incr i 1} {
+    label .r.reg$i -width 8 -font $dpyFont -relief ridge \
+	    -bg $normalBg
+    pack .r.reg$i -in .r.row -side left
+}
+
 
 ##############################################################################
 #  Main Control Panel                                                        #
@@ -185,7 +178,7 @@ for {set j 0} {$j < 3} {incr j 1} {
 wm title . $simname
 
 # Control Panel for simulator
-set cntlBW 11
+set cntlBW 9
 frame .cntl
 pack .cntl
 button .cntl.quit -width $cntlBW -text Quit -command exit
@@ -256,7 +249,7 @@ proc simGo {} {
 ##############################################################################
 
 # Overall width of pipe register display
-set procWidth 60
+set procWidth 40
 set procHeight 1
 set labWidth 8
 
@@ -321,24 +314,24 @@ proc ltranspose {inlist} {
 }
 
 # Fields in PC displayed
-# Total size = 16 
-set pwins(OPC) [ltranspose [list [addDisp .p.opc 16 PC]]]
+# Total size = 8 
+set pwins(OPC) [ltranspose [list [addDisp .p.opc 8 PC]]]
 
 # Fetch display
-# Total size = 6+4+4+16+16 = 46
+# Total size = 6+8+4+4+8 = 30
 set pwins(F) [ltranspose \
            [list [addDisp .p.f 6 Instr] \
 	         [addDisp .p.f 4 rA]\
 	         [addDisp .p.f 4 rB] \
-                 [addDisp .p.f 16 valC] \
-		 [addDisp .p.f 16 valP]]] 
+                 [addDisp .p.f 8 valC] \
+		 [addDisp .p.f 8 valP]]] 
 
 # Decode Display
-# Total size = 16+16+4+4+4+4 = 48
+# Total size = 4+8+4+8+4+4 = 32
 set pwins(D) [ltranspose \
            [list \
-		 [addDisp .p.d 16 valA] \
-		 [addDisp .p.d 16 valB] \
+		 [addDisp .p.d 8 valA] \
+		 [addDisp .p.d 8 valB] \
 		 [addDisp .p.d 4 dstE] \
 		 [addDisp .p.d 4 dstM] \
                  [addDisp .p.d 4 srcA] \
@@ -348,20 +341,20 @@ set pwins(D) [ltranspose \
 
 
 # Execute Display
-# Total size = 3+16 = 19
+# Total size = 3+8 = 11
 set pwins(E) [ltranspose \
            [list [addDisp .p.e 3 Cnd] \
-		 [addDisp .p.e 16 valE]]]
+		 [addDisp .p.e 8 valE]]]
 
 # Memory Display
-# Total size = 16
+# Total size = 8
 set pwins(M) [ltranspose \
-           [list [addDisp .p.m 16 valM]]]
+           [list [addDisp .p.m 8 valM]]]
 
 # New PC Display
-# Total Size = 16
+# Total Size = 8
 set pwins(NPC) [ltranspose \
-           [list [addDisp .p.npc 16 newPC]]]
+           [list [addDisp .p.npc 8 newPC]]]
 
 # update status line for specified proc register
 proc updateStage {name txts} {
@@ -418,8 +411,8 @@ proc addCodeLine {line addr op text} {
     global codeFont
     frame .c.tr.$addr
     pack .c.tr.$addr -in .c.tr -side top -anchor w
-    label .c.tr.$addr.a -width 6 -text [format "0x%x" $addr] -font $codeFont
-    label .c.tr.$addr.i -width 20 -text $op -font $codeFont 
+    label .c.tr.$addr.a -width 5 -text [format "0x%x" $addr] -font $codeFont
+    label .c.tr.$addr.i -width 12 -text $op -font $codeFont 
     label .c.tr.$addr.s -width 2 -text "" -font $codeFont -bg white
     label .c.tr.$addr.t -text $text -font $codeFont
     pack .c.tr.$addr.a .c.tr.$addr.i .c.tr.$addr.s \
@@ -466,8 +459,8 @@ pack .m.t -in .m -side top -anchor w
 
 label .m.t.lab -width 6 -font $dpyFont -text "      "
 pack .m.t.lab -in .m.t -side left
-for {set i 0} {$i < 16} {incr i 8} {
-    label .m.t.a$i -width 16 -font $dpyFont -text [format "  0x---%x" [expr $i % 16]]
+for {set i 0} {$i < 16} {incr i 4} {
+    label .m.t.a$i -width 8 -font $dpyFont -text [format "  0x---%x" [expr $i % 16]]
     pack .m.t.a$i -in .m.t -side left
 }
 
@@ -497,9 +490,9 @@ proc createMem {nminAddr nmemCnt} {
 	label .m.e.r$i.lab -width 6 -font $dpyFont -text [format "0x%.3x-"  [expr $addr / 16]]
 	pack .m.e.r$i.lab -in .m.e.r$i -side left
 
-	for {set j 0} {$j < 16} {incr j 8} {
+	for {set j 0} {$j < 16} {incr j 4} {
 	    set a [expr $addr + $j]
-	    label .m.e.v$a -width 16 -font $dpyFont -relief ridge \
+	    label .m.e.v$a -width 8 -font $dpyFont -relief ridge \
                 -bg $normalBg
 	    pack .m.e.v$a -in .m.e.r$i -side left
 	}
@@ -511,7 +504,7 @@ proc setMem {Addr Val} {
     if {$Addr < $minAddr || $Addr > [expr $minAddr + $memCnt]} {
 	error "Memory address $Addr out of range"
     }
-    .m.e.v$Addr config -text [format %16x $Val]
+    .m.e.v$Addr config -text [format %8x $Val]
 }
 
 proc clearMem {} {

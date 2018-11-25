@@ -1,16 +1,16 @@
 # /* $begin cjr-ys */
 # Code to generate a combination of not-taken branch and ret
-	irmovq Stack, %rsp
-	irmovq rtnp,%rax
-	pushq %rax	   # Set up return pointer
-	xorq %rax,%rax     # Set Z condition code
+	irmovl Stack, %esp
+	irmovl rtnp,%eax
+	pushl %eax	   # Set up return pointer
+	xorl %eax,%eax     # Set Z condition code
 	jne target	   # Not taken (First part of combination)
-        irmovq $1,%rax     # Should execute this
+        irmovl $1,%eax     # Should execute this
 	halt
 target:	ret		   # Second part of combination
-	irmovq $2,%rbx	   # Should not execute this
+	irmovl $2,%ebx	   # Should not execute this
 	halt
-rtnp: 	irmovq $3,%rdx     # Should not execute this
+rtnp: 	irmovl $3,%edx     # Should not execute this
 	halt
 .pos 0x40
 Stack:

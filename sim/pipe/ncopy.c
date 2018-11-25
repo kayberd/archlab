@@ -1,23 +1,21 @@
 #include <stdio.h>
 
-typedef word_t word_t;
-
-word_t src[8], dst[8];
+int src[8], dst[8];
 
 /* $begin ncopy */
 /*
- * ncopy - copy src to dst, returning number of negative ints
+ * ncopy - copy src to dst, returning number of positive ints
  * contained in src array.
  */
-word_t ncopy(word_t *src, word_t *dst, word_t len)
+int ncopy(int *src, int *dst, int len)
 {
-    word_t count = 0;
-    word_t val;
+    int count = 0;
+    int val;
 
     while (len > 0) {
 	val = *src++;
 	*dst++ = val;
-	if (val < 0)
+	if (val > 0)
 	    count++;
 	len--;
     }
@@ -27,7 +25,7 @@ word_t ncopy(word_t *src, word_t *dst, word_t len)
 
 int main()
 {
-    word_t i, count;
+    int i, count;
 
     for (i=0; i<8; i++)
 	src[i]= i+1;

@@ -1,14 +1,14 @@
-	      irmovq $1, %rsi
-	      irmovq $2, %rdi
-	      irmovq $4, %rbp
-	      irmovq $-32, %rax
-	      irmovq $64, %rdx
-	      subq %rdx,%rax
+	      irmovl $1, %esi
+	      irmovl $2, %edi
+	      irmovl $4, %ebp
+	      irmovl $-32, %eax
+	      irmovl $64, %edx
+	      subl %edx,%eax
 	      je target
 	      nop
               halt
 target:
-	      addq %rsi,%rdx
+	      addl %esi,%edx
 	      nop
               nop
               nop

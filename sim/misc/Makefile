@@ -1,6 +1,6 @@
-CC=/usr/bin/gcc
-CFLAGS=-Wall -O1 -g -DUSE_INTERP_RESULT
-LCFLAGS=-O1
+CC=gcc
+CFLAGS=-Wall -O2
+LCFLAGS=-O2
 LEX = flex
 YACC=bison
 LEXLIB = -lfl
@@ -54,6 +54,6 @@ hcl.tab.c: hcl.y
 
 clean:
 	rm -f *.o *.yo *.exe yis yas hcl2c mux4 *~ core.* 
-	rm -f hcl.tab.c hcl.tab.h lex.yy.c yas-grammar.c
+	rm -f hcl.tab.c hcl.tab.h lex.yy.c
 
 

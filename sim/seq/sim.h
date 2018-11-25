@@ -1,4 +1,3 @@
-
 /********** Defines **************/
 
 /* Get ra out of one byte regid field */
@@ -17,8 +16,8 @@ extern int plusmode;
 extern mem_t mem;
 
 /* Keep track of range of addresses that have been written */
-extern word_t minAddr;
-extern word_t memCnt;
+extern int minAddr;
+extern int memCnt;
 
 /* Register file */
 extern mem_t reg;
@@ -79,7 +78,7 @@ void sim_reset();
   if statusp nonnull, then will be set to status of final instruction
   if ccp nonnull, then will be set to condition codes of final instruction
 */
-word_t sim_run(word_t max_instr, byte_t *statusp, cc_t *ccp);
+int sim_run(int max_instr, byte_t *statusp, cc_t *ccp);
 
 /* If dumpfile set nonNULL, lots of status info printed out */
 void sim_set_dumpfile(FILE *file);
@@ -96,13 +95,13 @@ void sim_log( const char *format, ... );
 
 void signal_register_clear();
 
-void report_pc(word_t pc);
+void report_pc(unsigned pc);
 
 void report_state(char *id, char *txt);
 
 void show_cc(cc_t cc);
 
 void create_memory_display();
-void set_memory(word_t addr, word_t val);
+void set_memory(int addr, int val);
 #endif
 								       

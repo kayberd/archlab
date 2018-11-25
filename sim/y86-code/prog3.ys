@@ -1,6 +1,6 @@
 # prog3: Pad with 1 nop
-  irmovq $10,%rdx
-  irmovq  $3,%rax
+  irmovl $10,%edx
+  irmovl  $3,%eax
   nop
-  addq %rdx,%rax
+  addl %edx,%eax
   halt

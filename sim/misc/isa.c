@@ -16,23 +16,23 @@ struct {
     int id;
 } reg_table[REG_ERR+1] = 
 {
-    {"%rax",   REG_RAX},
-    {"%rcx",   REG_RCX},
-    {"%rdx",   REG_RDX},
-    {"%rbx",   REG_RBX},
-    {"%rsp",   REG_RSP},
-    {"%rbp",   REG_RBP},
-    {"%rsi",   REG_RSI},
-    {"%rdi",   REG_RDI},
-    {"%r8",   REG_R8},
-    {"%r9",   REG_R9},
-    {"%r10",   REG_R10},
-    {"%r11",   REG_R11},
-    {"%r12",   REG_R12},
-    {"%r13",   REG_R13},
-    {"%r14",   REG_R14},
-    {"----",   REG_NONE},
-    {"----",   REG_ERR}
+    {"%eax",   REG_EAX},
+    {"%ecx",   REG_ECX},
+    {"%edx",   REG_EDX},
+    {"%ebx",   REG_EBX},
+    {"%esp",   REG_ESP},
+    {"%ebp",   REG_EBP},
+    {"%esi",   REG_ESI},
+    {"%edi",   REG_EDI},
+    {"----",  REG_ERR},
+    {"----",  REG_ERR},
+    {"----",  REG_ERR},
+    {"----",  REG_ERR},
+    {"----",  REG_ERR},
+    {"----",  REG_ERR},
+    {"----",  REG_ERR},
+    {"----",  REG_NONE},
+    {"----",  REG_ERR}
 };
 
 
@@ -63,35 +63,36 @@ instr_t instruction_set[] =
 {
     {"nop",    HPACK(I_NOP, F_NONE), 1, NO_ARG, 0, 0, NO_ARG, 0, 0 },
     {"halt",   HPACK(I_HALT, F_NONE), 1, NO_ARG, 0, 0, NO_ARG, 0, 0 },
-    {"rrmovq", HPACK(I_RRMOVQ, F_NONE), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
-    /* Conditional move instructions are variants of RRMOVQ */
-    {"cmovle", HPACK(I_RRMOVQ, C_LE), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
-    {"cmovl", HPACK(I_RRMOVQ, C_L), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
-    {"cmove", HPACK(I_RRMOVQ, C_E), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
-    {"cmovne", HPACK(I_RRMOVQ, C_NE), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
-    {"cmovge", HPACK(I_RRMOVQ, C_GE), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
-    {"cmovg", HPACK(I_RRMOVQ, C_G), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
+    {"rrmovl", HPACK(I_RRMOVL, F_NONE), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
+    /* Conditional move instructions are variants of RRMOVL */
+    {"cmovle", HPACK(I_RRMOVL, C_LE), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
+    {"cmovl", HPACK(I_RRMOVL, C_L), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
+    {"cmove", HPACK(I_RRMOVL, C_E), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
+    {"cmovne", HPACK(I_RRMOVL, C_NE), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
+    {"cmovge", HPACK(I_RRMOVL, C_GE), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
+    {"cmovg", HPACK(I_RRMOVL, C_G), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
     /* arg1hi indicates number of bytes */
-    {"irmovq", HPACK(I_IRMOVQ, F_NONE), 10, I_ARG, 2, 8, R_ARG, 1, 0 },
-    {"rmmovq", HPACK(I_RMMOVQ, F_NONE), 10, R_ARG, 1, 1, M_ARG, 1, 0 },
-    {"mrmovq", HPACK(I_MRMOVQ, F_NONE), 10, M_ARG, 1, 0, R_ARG, 1, 1 },
-    {"addq",   HPACK(I_ALU, A_ADD), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
-    {"subq",   HPACK(I_ALU, A_SUB), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
-    {"andq",   HPACK(I_ALU, A_AND), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
-    {"xorq",   HPACK(I_ALU, A_XOR), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
+    {"irmovl", HPACK(I_IRMOVL, F_NONE), 6, I_ARG, 2, 4, R_ARG, 1, 0 },
+    {"rmmovl", HPACK(I_RMMOVL, F_NONE), 6, R_ARG, 1, 1, M_ARG, 1, 0 },
+    {"mrmovl", HPACK(I_MRMOVL, F_NONE), 6, M_ARG, 1, 0, R_ARG, 1, 1 },
+    {"addl",   HPACK(I_ALU, A_ADD), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
+    {"subl",   HPACK(I_ALU, A_SUB), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
+    {"andl",   HPACK(I_ALU, A_AND), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
+    {"xorl",   HPACK(I_ALU, A_XOR), 2, R_ARG, 1, 1, R_ARG, 1, 0 },
     /* arg1hi indicates number of bytes */
-    {"jmp",    HPACK(I_JMP, C_YES), 9, I_ARG, 1, 8, NO_ARG, 0, 0 },
-    {"jle",    HPACK(I_JMP, C_LE), 9, I_ARG, 1, 8, NO_ARG, 0, 0 },
-    {"jl",     HPACK(I_JMP, C_L), 9, I_ARG, 1, 8, NO_ARG, 0, 0 },
-    {"je",     HPACK(I_JMP, C_E), 9, I_ARG, 1, 8, NO_ARG, 0, 0 },
-    {"jne",    HPACK(I_JMP, C_NE), 9, I_ARG, 1, 8, NO_ARG, 0, 0 },
-    {"jge",    HPACK(I_JMP, C_GE), 9, I_ARG, 1, 8, NO_ARG, 0, 0 },
-    {"jg",     HPACK(I_JMP, C_G), 9, I_ARG, 1, 8, NO_ARG, 0, 0 },
-    {"call",   HPACK(I_CALL, F_NONE),    9, I_ARG, 1, 8, NO_ARG, 0, 0 },
+    {"jmp",    HPACK(I_JMP, C_YES), 5, I_ARG, 1, 4, NO_ARG, 0, 0 },
+    {"jle",    HPACK(I_JMP, C_LE), 5, I_ARG, 1, 4, NO_ARG, 0, 0 },
+    {"jl",     HPACK(I_JMP, C_L), 5, I_ARG, 1, 4, NO_ARG, 0, 0 },
+    {"je",     HPACK(I_JMP, C_E), 5, I_ARG, 1, 4, NO_ARG, 0, 0 },
+    {"jne",    HPACK(I_JMP, C_NE), 5, I_ARG, 1, 4, NO_ARG, 0, 0 },
+    {"jge",    HPACK(I_JMP, C_GE), 5, I_ARG, 1, 4, NO_ARG, 0, 0 },
+    {"jg",     HPACK(I_JMP, C_G), 5, I_ARG, 1, 4, NO_ARG, 0, 0 },
+    {"call",   HPACK(I_CALL, F_NONE),    5, I_ARG, 1, 4, NO_ARG, 0, 0 },
     {"ret",    HPACK(I_RET, F_NONE), 1, NO_ARG, 0, 0, NO_ARG, 0, 0 },
-    {"pushq",  HPACK(I_PUSHQ, F_NONE) , 2, R_ARG, 1, 1, NO_ARG, 0, 0 },
-    {"popq",   HPACK(I_POPQ, F_NONE) ,  2, R_ARG, 1, 1, NO_ARG, 0, 0 },
-    {"iaddq",  HPACK(I_IADDQ, F_NONE), 10, I_ARG, 2, 8, R_ARG, 1, 0 },
+    {"pushl",  HPACK(I_PUSHL, F_NONE) , 2, R_ARG, 1, 1, NO_ARG, 0, 0 },
+    {"popl",   HPACK(I_POPL, F_NONE) ,  2, R_ARG, 1, 1, NO_ARG, 0, 0 },
+    {"iaddl",  HPACK(I_IADDL, F_NONE), 6, I_ARG, 2, 4, R_ARG, 1, 0 },
+    {"leave",  HPACK(I_LEAVE, F_NONE), 1, NO_ARG, 0, 0, NO_ARG, 0, 0 },
     /* this is just a hack to make the I_POP2 code have an associated name */
     {"pop2",   HPACK(I_POP2, F_NONE) , 0, NO_ARG, 0, 0, NO_ARG, 0, 0 },
 
@@ -99,7 +100,6 @@ instr_t instruction_set[] =
     {".byte",  0x00, 1, I_ARG, 0, 1, NO_ARG, 0, 0 },
     {".word",  0x00, 2, I_ARG, 0, 2, NO_ARG, 0, 0 },
     {".long",  0x00, 4, I_ARG, 0, 4, NO_ARG, 0, 0 },
-    {".quad",  0x00, 8, I_ARG, 0, 8, NO_ARG, 0, 0 },
     {NULL,     0   , 0, NO_ARG, 0, 0, NO_ARG, 0, 0 }
 };
 
@@ -167,14 +167,14 @@ bool_t diff_mem(mem_t oldm, mem_t newm, FILE *outfile)
     bool_t diff = FALSE;
     if (newm->len < len)
 	len = newm->len;
-    for (pos = 0; (!diff || outfile) && pos < len; pos += 8) {
+    for (pos = 0; (!diff || outfile) && pos < len; pos += 4) {
         word_t ov = 0;  word_t nv = 0;
 	get_word_val(oldm, pos, &ov);
 	get_word_val(newm, pos, &nv);
 	if (nv != ov) {
 	    diff = TRUE;
 	    if (outfile)
-		fprintf(outfile, "0x%.4llx:\t0x%.16llx\t0x%.16llx\n", pos, ov, nv);
+		fprintf(outfile, "0x%.4x:\t0x%.8x\t0x%.8x\n", pos, ov, nv);
 	}
     }
     return diff;
@@ -199,20 +199,21 @@ int load_mem(mem_t m, FILE *infile, int report_error)
     int byte_cnt = 0;
     int lineno = 0;
     word_t bytepos = 0;
-#ifdef HAS_GUI
     int empty_line = 1;
     int addr = 0;
-    char hexcode[21];
+    char hexcode[15];
+
+#ifdef HAS_GUI
     /* For display */
     int line_no = 0;
     char line[LINELEN];
-    int index = 0;
 #endif /* HAS_GUI */   
+
+    int index = 0;
+
     while (fgets(buf, LINELEN, infile)) {
 	int cpos = 0;
-#ifdef HAS_GUI
 	empty_line = 1;
-#endif
 	lineno++;
 	/* Skip white space */
 	while (isspace((int)buf[cpos]))
@@ -243,13 +244,12 @@ int load_mem(mem_t m, FILE *infile, int report_error)
 	    return 0;
 	}
 
-#ifdef HAS_GUI
 	addr = bytepos;
-	index = 0;
-#endif
 
 	while (isspace((int)buf[cpos]))
 	    cpos++;
+
+	index = 0;
 
 	/* Get code */
 	while (isxdigit((int)(ch=buf[cpos++])) && 
@@ -258,7 +258,7 @@ int load_mem(mem_t m, FILE *infile, int report_error)
 	    if (bytepos >= m->len) {
 		if (report_error) {
 		    fprintf(stderr,
-			    "Error reading file. Invalid address. 0x%llx\n",
+			    "Error reading file. Invalid address. 0x%x\n",
 			    bytepos);
 		    fprintf(stderr, "Line %d:%s\n", lineno, buf);
 		}
@@ -267,19 +267,16 @@ int load_mem(mem_t m, FILE *infile, int report_error)
 	    byte = hex2dig(ch)*16+hex2dig(cl);
 	    m->contents[bytepos++] = byte;
 	    byte_cnt++;
-#ifdef HAS_GUI
 	    empty_line = 0;
 	    hexcode[index++] = ch;
 	    hexcode[index++] = cl;
-#endif
 	}
-#ifdef HAS_GUI
-	/* Fill rest of hexcode with blanks.
-	   Needs to be 2x longest instruction */
-	for (; index < 20; index++)
+	/* Fill rest of hexcode with blanks */
+	for (; index < 12; index++)
 	    hexcode[index] = ' ';
 	hexcode[index] = '\0';
 
+#ifdef HAS_GUI
 	if (gui_mode) {
 	    /* Now get the rest of the line */
 	    while (isspace((int)buf[cpos]))
@@ -311,13 +308,11 @@ bool_t get_word_val(mem_t m, word_t pos, word_t *dest)
 {
     int i;
     word_t val;
-    if (pos < 0 || pos + 8 > m->len)
+    if (pos < 0 || pos + 4 > m->len)
 	return FALSE;
     val = 0;
-    for (i = 0; i < 8; i++) {
-	word_t b =  m->contents[pos+i] & 0xFF;
-	val = val | (b <<(8*i));
-    }
+    for (i = 0; i < 4; i++)
+	val = val | m->contents[pos+i]<<(8*i);
     *dest = val;
     return TRUE;
 }
@@ -333,10 +328,10 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 bool_t set_word_val(mem_t m, word_t pos, word_t val)
 {
     int i;
-    if (pos < 0 || pos + 8 > m->len)
+    if (pos < 0 || pos + 4 > m->len)
 	return FALSE;
-    for (i = 0; i < 8; i++) {
-	m->contents[pos+i] = (byte_t) val & 0xFF;
+    for (i = 0; i < 4; i++) {
+	m->contents[pos+i] = val & 0xFF;
 	val >>= 8;
     }
     return TRUE;
@@ -357,17 +352,17 @@ void dump_memory(FILE *outfile, mem_t m, word_t pos, int len)
 
     for (i = 0; i < len; i+=BPL) {
 	word_t val = 0;
-	fprintf(outfile, "0x%.4llx:", pos+i);
-	for (j = 0; j < BPL; j+= 8) {
+	fprintf(outfile, "0x%.4x:", pos+i);
+	for (j = 0; j < BPL; j+= 4) {
 	    get_word_val(m, pos+i+j, &val);
-	    fprintf(outfile, " %.16llx", val);
+	    fprintf(outfile, " %.8x", val);
 	}
     }
 }
 
 mem_t init_reg()
 {
-    return init_mem(128);
+    return init_mem(32);
 }
 
 void free_reg(mem_t r)
@@ -387,7 +382,7 @@ bool_t diff_reg(mem_t oldr, mem_t newr, FILE *outfile)
     bool_t diff = FALSE;
     if (newr->len < len)
 	len = newr->len;
-    for (pos = 0; (!diff || outfile) && pos < len; pos += 8) {
+    for (pos = 0; (!diff || outfile) && pos < len; pos += 4) {
         word_t ov = 0;
         word_t nv = 0;
 	get_word_val(oldr, pos, &ov);
@@ -395,8 +390,8 @@ bool_t diff_reg(mem_t oldr, mem_t newr, FILE *outfile)
 	if (nv != ov) {
 	    diff = TRUE;
 	    if (outfile)
-		fprintf(outfile, "%s:\t0x%.16llx\t0x%.16llx\n",
-			reg_table[pos/8].name, ov, nv);
+		fprintf(outfile, "%s:\t0x%.8x\t0x%.8x\n",
+			reg_table[pos/4].name, ov, nv);
 	}
     }
     return diff;
@@ -407,14 +402,14 @@ word_t get_reg_val(mem_t r, reg_id_t id)
     word_t val = 0;
     if (id >= REG_NONE)
 	return 0;
-    get_word_val(r,id*8, &val);
+    get_word_val(r,id*4, &val);
     return val;
 }
 
 void set_reg_val(mem_t r, reg_id_t id, word_t val)
 {
     if (id < REG_NONE) {
-	set_word_val(r,id*8,val);
+	set_word_val(r,id*4,val);
 #ifdef HAS_GUI
 	if (gui_mode) {
 	    signal_register_update(id, val);
@@ -431,8 +426,8 @@ void dump_reg(FILE *outfile, mem_t r) {
     fprintf(outfile, "\n");
     for (id = 0; reg_valid(id); id++) {
 	word_t val = 0;
-	get_word_val(r, id*8, &val);
-	fprintf(outfile, " %llx", val);
+	get_word_val(r, id*4, &val);
+	fprintf(outfile, " %x", val);
     }
     fprintf(outfile, "\n");
 }
@@ -483,16 +478,16 @@ cc_t compute_cc(alu_t op, word_t argA, word_t argB)
 {
     word_t val = compute_alu(op, argA, argB);
     bool_t zero = (val == 0);
-    bool_t sign = ((word_t)val < 0);
+    bool_t sign = ((int)val < 0);
     bool_t ovf;
     switch(op) {
     case A_ADD:
-        ovf = (((word_t) argA < 0) == ((word_t) argB < 0)) &&
-  	       (((word_t) val < 0) != ((word_t) argA < 0));
+        ovf = (((int) argA < 0) == ((int) argB < 0)) &&
+  	       (((int) val < 0) != ((int) argA < 0));
 	break;
     case A_SUB:
-        ovf = (((word_t) argA > 0) == ((word_t) argB < 0)) &&
-	       (((word_t) val < 0) != ((word_t) argB < 0));
+        ovf = (((int) argA > 0) == ((int) argB < 0)) &&
+	       (((int) val < 0) != ((int) argB < 0));
 	break;
     case A_AND:
     case A_XOR:
@@ -569,7 +564,7 @@ bool_t diff_state(state_ptr olds, state_ptr news, FILE *outfile) {
     if (olds->pc != news->pc) {
 	diff = TRUE;
 	if (outfile) {
-	    fprintf(outfile, "pc:\t0x%.16llx\t0x%.16llx\n", olds->pc, news->pc);
+	    fprintf(outfile, "pc:\t0x%.8x\t0x%.8x\n", olds->pc, news->pc);
 	}
     }
     if (olds->cc != news->cc) {
@@ -644,7 +639,7 @@ stat_t step_state(state_ptr s, FILE *error_file)
     if (!get_byte_val(s->m, ftpc, &byte0)) {
 	if (error_file)
 	    fprintf(error_file,
-		    "PC = 0x%llx, Invalid instruction address\n", s->pc);
+		    "PC = 0x%x, Invalid instruction address\n", s->pc);
 	return STAT_ADR;
     }
     ftpc++;
@@ -653,9 +648,9 @@ stat_t step_state(state_ptr s, FILE *error_file)
     lo0 = LO4(byte0);
 
     need_regids =
-	(hi0 == I_RRMOVQ || hi0 == I_ALU || hi0 == I_PUSHQ ||
-	 hi0 == I_POPQ || hi0 == I_IRMOVQ || hi0 == I_RMMOVQ ||
-	 hi0 == I_MRMOVQ || hi0 == I_IADDQ);
+	(hi0 == I_RRMOVL || hi0 == I_ALU || hi0 == I_PUSHL ||
+	 hi0 == I_POPL || hi0 == I_IRMOVL || hi0 == I_RMMOVL ||
+	 hi0 == I_MRMOVL || hi0 == I_IADDL);
 
     if (need_regids) {
 	ok1 = get_byte_val(s->m, ftpc, &byte1);
@@ -665,12 +660,12 @@ stat_t step_state(state_ptr s, FILE *error_file)
     }
 
     need_imm =
-	(hi0 == I_IRMOVQ || hi0 == I_RMMOVQ || hi0 == I_MRMOVQ ||
-	 hi0 == I_JMP || hi0 == I_CALL || hi0 == I_IADDQ);
+	(hi0 == I_IRMOVL || hi0 == I_RMMOVL || hi0 == I_MRMOVL ||
+	 hi0 == I_JMP || hi0 == I_CALL || hi0 == I_IADDL);
 
     if (need_imm) {
 	okc = get_word_val(s->m, ftpc, &cval);
-	ftpc += 8;
+	ftpc += 4;
     }
 
     switch (hi0) {
@@ -680,24 +675,24 @@ stat_t step_state(state_ptr s, FILE *error_file)
     case I_HALT:
 	return STAT_HLT;
 	break;
-    case I_RRMOVQ:  /* Both unconditional and conditional moves */
+    case I_RRMOVL:  /* Both unconditional and conditional moves */
 	if (!ok1) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
 	if (!reg_valid(hi1)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid register ID 0x%.1x\n",
+			"PC = 0x%x, Invalid register ID 0x%.1x\n",
 			s->pc, hi1);
 	    return STAT_INS;
 	}
 	if (!reg_valid(lo1)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid register ID 0x%.1x\n",
+			"PC = 0x%x, Invalid register ID 0x%.1x\n",
 			s->pc, lo1);
 	    return STAT_INS;
 	}
@@ -706,47 +701,47 @@ stat_t step_state(state_ptr s, FILE *error_file)
 	  set_reg_val(s->r, lo1, val);
 	s->pc = ftpc;
 	break;
-    case I_IRMOVQ:
+    case I_IRMOVL:
 	if (!ok1) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
 	if (!okc) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address",
+			"PC = 0x%x, Invalid instruction address",
 			s->pc);
 	    return STAT_INS;
 	}
 	if (!reg_valid(lo1)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid register ID 0x%.1x\n",
+			"PC = 0x%x, Invalid register ID 0x%.1x\n",
 			s->pc, lo1);
 	    return STAT_INS;
 	}
 	set_reg_val(s->r, lo1, cval);
 	s->pc = ftpc;
 	break;
-    case I_RMMOVQ:
+    case I_RMMOVL:
 	if (!ok1) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
 	if (!okc) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_INS;
 	}
 	if (!reg_valid(hi1)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid register ID 0x%.1x\n",
+			"PC = 0x%x, Invalid register ID 0x%.1x\n",
 			s->pc, hi1);
 	    return STAT_INS;
 	}
@@ -756,29 +751,29 @@ stat_t step_state(state_ptr s, FILE *error_file)
 	if (!set_word_val(s->m, cval, val)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid data address 0x%llx\n",
+			"PC = 0x%x, Invalid data address 0x%x\n",
 			s->pc, cval);
 	    return STAT_ADR;
 	}
 	s->pc = ftpc;
 	break;
-    case I_MRMOVQ:
+    case I_MRMOVL:
 	if (!ok1) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
 	if (!okc) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction addres\n", s->pc);
+			"PC = 0x%x, Invalid instruction addres\n", s->pc);
 	    return STAT_INS;
 	}
 	if (!reg_valid(hi1)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid register ID 0x%.1x\n",
+			"PC = 0x%x, Invalid register ID 0x%.1x\n",
 			s->pc, hi1);
 	    return STAT_INS;
 	}
@@ -793,7 +788,7 @@ stat_t step_state(state_ptr s, FILE *error_file)
 	if (!ok1) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
 	argA = get_reg_val(s->r, hi1);
@@ -807,13 +802,13 @@ stat_t step_state(state_ptr s, FILE *error_file)
 	if (!ok1) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
 	if (!okc) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
 	if (cond_holds(s->cc, lo0))
@@ -825,105 +820,118 @@ stat_t step_state(state_ptr s, FILE *error_file)
 	if (!ok1) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
 	if (!okc) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
-	val = get_reg_val(s->r, REG_RSP) - 8;
-	set_reg_val(s->r, REG_RSP, val);
+	val = get_reg_val(s->r, REG_ESP) - 4;
+	set_reg_val(s->r, REG_ESP, val);
 	if (!set_word_val(s->m, val, ftpc)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid stack address 0x%llx\n", s->pc, val);
+			"PC = 0x%x, Invalid stack address 0x%x\n", s->pc, val);
 	    return STAT_ADR;
 	}
 	s->pc = cval;
 	break;
     case I_RET:
 	/* Return Instruction.  Pop address from stack */
-	dval = get_reg_val(s->r, REG_RSP);
+	dval = get_reg_val(s->r, REG_ESP);
 	if (!get_word_val(s->m, dval, &val)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid stack address 0x%llx\n",
+			"PC = 0x%x, Invalid stack address 0x%x\n",
 			s->pc, dval);
 	    return STAT_ADR;
 	}
-	set_reg_val(s->r, REG_RSP, dval + 8);
+	set_reg_val(s->r, REG_ESP, dval + 4);
 	s->pc = val;
 	break;
-    case I_PUSHQ:
+    case I_PUSHL:
 	if (!ok1) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
 	if (!reg_valid(hi1)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid register ID 0x%.1x\n", s->pc, hi1);
+			"PC = 0x%x, Invalid register ID 0x%.1x\n", s->pc, hi1);
 	    return STAT_INS;
 	}
 	val = get_reg_val(s->r, hi1);
-	dval = get_reg_val(s->r, REG_RSP) - 8;
-	set_reg_val(s->r, REG_RSP, dval);
+	dval = get_reg_val(s->r, REG_ESP) - 4;
+	set_reg_val(s->r, REG_ESP, dval);
 	if  (!set_word_val(s->m, dval, val)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid stack address 0x%llx\n", s->pc, dval);
+			"PC = 0x%x, Invalid stack address 0x%x\n", s->pc, dval);
 	    return STAT_ADR;
 	}
 	s->pc = ftpc;
 	break;
-    case I_POPQ:
+    case I_POPL:
 	if (!ok1) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
 	if (!reg_valid(hi1)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid register ID 0x%.1x\n", s->pc, hi1);
+			"PC = 0x%x, Invalid register ID 0x%.1x\n", s->pc, hi1);
 	    return STAT_INS;
 	}
-	dval = get_reg_val(s->r, REG_RSP);
-	set_reg_val(s->r, REG_RSP, dval+8);
+	dval = get_reg_val(s->r, REG_ESP);
+	set_reg_val(s->r, REG_ESP, dval+4);
 	if (!get_word_val(s->m, dval, &val)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid stack address 0x%llx\n",
+			"PC = 0x%x, Invalid stack address 0x%x\n",
 			s->pc, dval);
 	    return STAT_ADR;
 	}
 	set_reg_val(s->r, hi1, val);
 	s->pc = ftpc;
 	break;
-    case I_IADDQ:
+    case I_LEAVE:
+	dval = get_reg_val(s->r, REG_EBP);
+	set_reg_val(s->r, REG_ESP, dval+4);
+	if (!get_word_val(s->m, dval, &val)) {
+	    if (error_file)
+		fprintf(error_file,
+			"PC = 0x%x, Invalid stack address 0x%x\n",
+			s->pc, dval);
+	    return STAT_ADR;
+	}
+	set_reg_val(s->r, REG_EBP, val);
+	s->pc = ftpc;
+	break;
+    case I_IADDL:
 	if (!ok1) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address\n", s->pc);
+			"PC = 0x%x, Invalid instruction address\n", s->pc);
 	    return STAT_ADR;
 	}
 	if (!okc) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid instruction address",
+			"PC = 0x%x, Invalid instruction address",
 			s->pc);
 	    return STAT_INS;
 	}
 	if (!reg_valid(lo1)) {
 	    if (error_file)
 		fprintf(error_file,
-			"PC = 0x%llx, Invalid register ID 0x%.1x\n",
+			"PC = 0x%x, Invalid register ID 0x%.1x\n",
 			s->pc, lo1);
 	    return STAT_INS;
 	}
@@ -936,7 +944,7 @@ stat_t step_state(state_ptr s, FILE *error_file)
     default:
 	if (error_file)
 	    fprintf(error_file,
-		    "PC = 0x%llx, Invalid instruction %.2x\n", s->pc, byte0);
+		    "PC = 0x%x, Invalid instruction %.2x\n", s->pc, byte0);
 	return STAT_INS;
     }
     return STAT_AOK;

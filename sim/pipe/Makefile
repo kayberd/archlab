@@ -1,6 +1,6 @@
 # Modify this line to indicate the default version to build
 
-VERSION=full
+VERSION=std
 
 # Comment this out if you don't have Tcl/Tk on your system
 
@@ -22,8 +22,8 @@ TKINC=-isystem /usr/include/tk
 # Modify these two lines to choose your compiler and compile time
 # flags.
 
-CC=/usr/bin/gcc
-CFLAGS=-Wall -O2 -DUSE_INTERP_RESULT
+CC=gcc
+CFLAGS=-Wall -O2
 
 ##################################################
 # You shouldn't need to modify anything below here

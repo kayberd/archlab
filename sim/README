@@ -1,17 +1,17 @@
 /***********************************************************************
- * Y86-64 Tools (Student Distribution)
+ * Y86 Tools (Student Distribution)
  *
- * Copyright (c) 2002, 2010, 2015, R. Bryant and D. O'Hallaron,
+ * Copyright (c) 2002, 2010 R. Bryant and D. O'Hallaron,
  * All rights reserved. May not be used, modified, or copied
  * without permission.
  ***********************************************************************/ 
 
-This directory contains the student distribution of the Y86-64 tools.  It
+This directory contains the student distribution of the Y86 tools.  It
 is a proper subset of the master distribution, minus the solution
 files found in the master distribution.
 
-yas		Y86-64 assembler
-yis		Y86-64 instruction (ISA) simulator 
+yas		Y86 assembler
+yis		Y86 instruction (ISA) simulator 
 hcl2c		HCL to C translator
 hcl2v		HCL to Verilog translator
 ssim		SEQ simulator
@@ -19,10 +19,10 @@ ssim+		SEQ+ simulator
 psim		PIPE simulator
 
 *************************
-1. Building the Y86-64 tools
+1. Building the Y86 tools
 *************************
 
-The Y86-64 simulators can be configured to support TTY and GUI
+The Y86 simulators can be configured to support TTY and GUI
 interfaces. A simulator running in TTY mode prints all information
 about its run-time behavior on the terminal.  It's harder to understand what's
 going on, but useful for automated testing, and doesn't require any
@@ -30,7 +30,7 @@ special installation features.  A simulator running in GUI mode uses a
 fancy graphical user interface.  Nice for visualizing and debugging,
 but requires installation of Tcl/Tk on your system.
 
-To build the Y86-64 tools, perform the following steps:
+To build the Y86 tools, perform the following steps:
 
 NOTE: If your instructor prepared this distribution for you, then you
 can skip Step 1 and proceed directly to Step 2. The Makefile will
@@ -57,7 +57,7 @@ your system, then build the TTY form by commenting out all three of
 these variables (GUIMODE, TKLIBS, and TKINC) in the Makefile.
 
 Step 2: Once you've modified the Makefile to build either the GUI or
-TTY form, then you can construct the entire set of Y86-64 tools by typing 
+TTY form, then you can construct the entire set of Y86 tools by typing 
 
 	unix> make clean; make
 
@@ -66,13 +66,13 @@ TTY form, then you can construct the entire set of Y86-64 tools by typing
 ********
 
 Makefile
-	Builds the Y86-64 tools
+	Builds the Y86 tools
 
 README
 	This file
 
 misc/	
-	Source files for the Y86-64 assembler yas, the Y86-64 instruction
+	Source files for the Y86 assembler yas, the Y86 instruction
 	simulator yis, and the isa.c file that is used by the -t option
 	of the processor simulators to check the results against the
 	ISA simulation.  Also contains files for the programs

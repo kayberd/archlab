@@ -1,13 +1,14 @@
-# Demonstrate branch cancellation
+# Demonstration of return
 # /* $begin prog7-ys */
 # prog7
-   xorq %rax,%rax 
-   jne  target        # Not taken
-   irmovq $1, %rax    # Fall through
+   irmovl Stack,%esp  # Initialize stack pointer
+   call Proc          # procedure call
+   irmovl $10,%edx    # return point
    halt
-target:
-   irmovq $2, %rdx    # Target
-   irmovq $3, %rbx    # Target+1
+.pos 0x20
+Proc:                 # Proc:
+   ret                # return immediately
+   rrmovl %edx,%ebx   # not executed
+.pos 0x30
+Stack:                # Stack: Stack pointer
 # /* $end prog7-ys */
-   halt
-

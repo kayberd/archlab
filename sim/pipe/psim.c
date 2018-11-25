@@ -1,9 +1,9 @@
-/**************************************************************************
- * psim.c - Pipelined Y86-64 simulator
+/***********************************************************************
+ * psim.c - Pipelined Y86 simulator
  * 
- * Copyright (c) 2010, 2015. Bryant and D. O'Hallaron, All rights reserved.
+ * Copyright (c) 2010, R. Bryant and D. O'Hallaron, All rights reserved.
  * May not be used, modified, or copied without permission.
- **************************************************************************/ 
+ ***********************************************************************/ 
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +17,9 @@
 #include "sim.h"
 
 #define MAXBUF 1024
-#define DEFAULTNAME "Y86-64 Simulator: "
+#define DEFAULTNAME "Y86 Simulator: "
+
+#define USE_INTERP_RESULT
 
 #ifdef HAS_GUI
 #include <tk.h>
@@ -41,7 +43,7 @@ int gui_mode = FALSE;    /* Run in GUI mode instead of TTY mode? (-g) */
 char *object_filename;   /* The input object file name. */
 FILE *object_file;       /* Input file handle */
 bool_t verbosity = 2;    /* Verbosity level [TTY only] (-v) */ 
-word_t instr_limit = 10000; /* Instruction limit [TTY only] (-l) */
+int instr_limit = 10000; /* Instruction limit [TTY only] (-l) */
 bool_t do_check = FALSE; /* Test with ISA simulator? [TTY only] (-t) */
 
 /************* 
@@ -53,7 +55,6 @@ bool_t do_check = FALSE; /* Test with ISA simulator? [TTY only] (-t) */
  * Begin function prototypes 
  ***************************/
 
-word_t sim_run_pipe(word_t max_instr, word_t max_cycle, byte_t *statusp, cc_t *ccp);
 static void usage(char *name);           /* Print helpful usage message */
 static void run_tty_sim();               /* Run simulator in TTY mode */
 
@@ -82,6 +83,7 @@ int sim_main(int argc, char **argv)
     int i;
     int c;
     char *myargv[MAXARGS];
+
     
     /* Parse the command line arguments */
     while ((c = getopt(argc, argv, "htgl:v:")) != -1) {
@@ -90,7 +92,7 @@ int sim_main(int argc, char **argv)
 	    usage(argv[0]);
 	    break;
 	case 'l':
-	    instr_limit = atoll(optarg);
+	    instr_limit = atoi(optarg);
 	    break;
 	case 'v':
 	    verbosity = atoi(optarg);
@@ -180,10 +182,10 @@ int sim_main(int argc, char **argv)
  */
 static void run_tty_sim() 
 {
-    word_t icount = 0;
+    int icount = 0;
     byte_t run_status = STAT_AOK;
     cc_t result_cc = 0;
-    word_t byte_cnt = 0;
+    int byte_cnt = 0;
     mem_t mem0, reg0;
     state_ptr isa_state = NULL;
 
@@ -206,7 +208,7 @@ static void run_tty_sim()
 	fprintf(stderr, "No lines of code found\n");
 	exit(1);
     } else if (verbosity >= 2) {
-	printf("%lld bytes of code read\n", byte_cnt);
+	printf("%d bytes of code read\n", byte_cnt);
     }
     fclose(object_file);
     if (do_check) {
@@ -223,7 +225,7 @@ static void run_tty_sim()
     
     icount = sim_run_pipe(instr_limit, 5*instr_limit, &run_status, &result_cc);
     if (verbosity > 0) {
-	printf("%lld instructions executed\n", icount);
+	printf("%d instructions executed\n", icount);
 	printf("Status = %s\n", stat_name(run_status));
 	printf("Condition Codes: %s\n", cc_name(result_cc));
 	printf("Changed Register State:\n");
@@ -233,7 +235,7 @@ static void run_tty_sim()
     }
     if (do_check) {
 	byte_t e = STAT_AOK;
-	word_t step;
+	int step;
 	bool_t match = TRUE;
 
 	for (step = 0; step < instr_limit && e == STAT_AOK; step++) {
@@ -271,7 +273,7 @@ static void run_tty_sim()
     /* Emit CPI statistics */
     {
 	double cpi = instructions > 0 ? (double) cycles/instructions : 1.0;
-	printf("CPI: %lld cycles/%lld instructions = %.2f\n",
+	printf("CPI: %d cycles/%d instructions = %.2f\n",
 	       cycles, instructions, cpi);
     }
 
@@ -286,7 +288,7 @@ static void usage(char *name)
     printf("file.yo arg required in GUI mode, optional in TTY mode (default stdin)\n");
     printf("   -h     Print this message\n");
     printf("   -g     Run in GUI mode instead of TTY mode (default TTY)\n");  
-    printf("   -l m   Set instruction limit to m [TTY mode only] (default %lld)\n", instr_limit);
+    printf("   -l m   Set instruction limit to m [TTY mode only] (default %d)\n", instr_limit);
     printf("   -v n   Set verbosity level to 0 <= n <= 2 [TTY mode only] (default %d)\n", verbosity);
     printf("   -t     Test result against ISA simulator [TTY mode only]\n");
     exit(0);
@@ -303,20 +305,19 @@ static void usage(char *name)
  *****************/
 
 /* Performance monitoring */
-/* How many cycles have been simulated? */
-word_t cycles = 0;
-/* How many instructions have passed through the WB stage? */
-word_t instructions = 0;
 
 /* Has simulator gotten past initial bubbles? */
 static int starting_up = 1;
 
-
+/* How many cycles have been simulated? */
+int cycles = 0;
+/* How many instructions have passed through the WB stage? */
+int instructions = 0;
 
 /* Both instruction and data memory */
 mem_t mem;
-word_t minAddr = 0;
-word_t memCnt = 0;
+int minAddr = 0;
+int memCnt = 0;
 
 /* Register file */
 mem_t reg;
@@ -384,18 +385,18 @@ static char status_msg[128];
 
 static char *format_pc(pc_ptr state)
 {
-    char pstring[17];
-    wstring(state->pc, 4, 64, pstring);
+    char pstring[9];
+    wstring(state->pc, 4, 32, pstring);
     sprintf(status_msg, "%s %s", stat_name(state->status), pstring);
     return status_msg;
 }
 
 static char *format_if_id(if_id_ptr state)
 {
-    char valcstring[17];
-    char valpstring[17];
-    wstring(state->valc, 4, 64, valcstring);
-    wstring(state->valp, 4, 64, valpstring);
+    char valcstring[9];
+    char valpstring[9];
+    wstring(state->valc, 4, 32, valcstring);
+    wstring(state->valp, 4, 32, valpstring);
     sprintf(status_msg, "%s %s %s %s %s %s",
 	    stat_name(state->status),
 	    iname(HPACK(state->icode,state->ifun)),
@@ -408,12 +409,12 @@ static char *format_if_id(if_id_ptr state)
 
 static char *format_id_ex(id_ex_ptr state)
 {
-    char valcstring[17];
-    char valastring[17];
-    char valbstring[17];
-    wstring(state->valc, 4, 64, valcstring);
-    wstring(state->vala, 4, 64, valastring);
-    wstring(state->valb, 4, 64, valbstring);
+    char valcstring[9];
+    char valastring[9];
+    char valbstring[9];
+    wstring(state->valc, 4, 32, valcstring);
+    wstring(state->vala, 4, 32, valastring);
+    wstring(state->valb, 4, 32, valbstring);
     sprintf(status_msg, "%s %s %s %s %s %s %s %s %s",
 	    stat_name(state->status),
 	    iname(HPACK(state->icode, state->ifun)),
@@ -429,10 +430,10 @@ static char *format_id_ex(id_ex_ptr state)
 
 static char *format_ex_mem(ex_mem_ptr state)
 {
-    char valestring[17];
-    char valastring[17];
-    wstring(state->vale, 4, 64, valestring);
-    wstring(state->vala, 4, 64, valastring);
+    char valestring[9];
+    char valastring[9];
+    wstring(state->vale, 4, 32, valestring);
+    wstring(state->vala, 4, 32, valastring);
     sprintf(status_msg, "%s %s %c %s %s %s %s",
 	    stat_name(state->status),
 	    iname(HPACK(state->icode, state->ifun)),
@@ -447,10 +448,10 @@ static char *format_ex_mem(ex_mem_ptr state)
 
 static char *format_mem_wb(mem_wb_ptr state)
 {
-    char valestring[17];
-    char valmstring[17];
-    wstring(state->vale, 4, 64, valestring);
-    wstring(state->valm, 4, 64, valmstring);
+    char valestring[9];
+    char valmstring[9];
+    wstring(state->vale, 4, 32, valestring);
+    wstring(state->valm, 4, 32, valmstring);
     sprintf(status_msg, "%s %s %s %s %s %s",
 	    stat_name(state->status),
 	    iname(HPACK(state->icode, state->ifun)),
@@ -576,7 +577,7 @@ void sim_reset()
 #ifdef HAS_GUI
     if (gui_mode) {
 	signal_register_clear();
-	create_memory_display();
+	create_memory_display(minAddr, memCnt);
     }
 #endif
 
@@ -599,40 +600,40 @@ static void update_state(bool_t update_mem, bool_t update_cc)
     /* Writeback(s):
        If either register is REG_NONE, write will have no effect .
        Order of two writes determines semantics of
-       popl %rsp.  According to ISA, %rsp will get popped value
+       popl %esp.  According to ISA, %esp will get popped value
     */
 
     if (wb_destE != REG_NONE) {
-	sim_log("\tWriteback: Wrote 0x%llx to register %s\n",
+	sim_log("\tWriteback: Wrote 0x%x to register %s\n",
 		wb_valE, reg_name(wb_destE));
 	set_reg_val(reg, wb_destE, wb_valE);
     }
     if (wb_destM != REG_NONE) {
-	sim_log("\tWriteback: Wrote 0x%llx to register %s\n",
+	sim_log("\tWriteback: Wrote 0x%x to register %s\n",
 		wb_valM, reg_name(wb_destM));
 	set_reg_val(reg, wb_destM, wb_valM);
     }
 
     /* Memory write */
     if (mem_write && !update_mem) {
-	sim_log("\tDisabled write of 0x%llx to address 0x%llx\n", mem_data, mem_addr);
+	sim_log("\tDisabled write of 0x%x to address 0x%x\n", mem_data, mem_addr);
     }
     if (update_mem && mem_write) {
 	if (!set_word_val(mem, mem_addr, mem_data)) {
-	    sim_log("\tCouldn't write to address 0x%llx\n", mem_addr);
+	    sim_log("\tCouldn't write to address 0x%x\n", mem_addr);
 	} else {
-	    sim_log("\tWrote 0x%llx to address 0x%llx\n", mem_data, mem_addr);
+	    sim_log("\tWrote 0x%x to address 0x%x\n", mem_data, mem_addr);
 
 #ifdef HAS_GUI
 	    if (gui_mode) {
-		if (mem_addr % 8 != 0) {
+		if (mem_addr % 4 != 0) {
 		    /* Just did a misaligned write.
 		       Need to display both words */
 		    word_t align_addr = mem_addr & ~0x3;
 		    word_t val;
 		    get_word_val(mem, align_addr, &val);
 		    set_memory(align_addr, val);
-		    align_addr+=8;
+		    align_addr+=4;
 		    get_word_val(mem, align_addr, &val);
 		    set_memory(align_addr, val);
 		} else {
@@ -648,32 +649,32 @@ static void update_state(bool_t update_mem, bool_t update_cc)
 }
 
 /* Text representation of status */
-void tty_report(word_t cyc) {
-  sim_log("\nCycle %lld. CC=%s, Stat=%s\n", cyc, cc_name(cc), stat_name(status));
+void tty_report(int cyc) {
+  sim_log("\nCycle %d. CC=%s, Stat=%s\n", cyc, cc_name(cc), stat_name(status));
 
-  sim_log("F: predPC = 0x%llx\n", pc_curr->pc);
+  sim_log("F: predPC = 0x%x\n", pc_curr->pc);
 
-  sim_log("D: instr = %s, rA = %s, rB = %s, valC = 0x%llx, valP = 0x%llx, Stat = %s\n",
+  sim_log("D: instr = %s, rA = %s, rB = %s, valC = 0x%x, valP = 0x%x, Stat = %s\n",
 	  iname(HPACK(if_id_curr->icode, if_id_curr->ifun)),
 	  reg_name(if_id_curr->ra), reg_name(if_id_curr->rb),
 	  if_id_curr->valc, if_id_curr->valp,
 	  stat_name(if_id_curr->status));
 
-  sim_log("E: instr = %s, valC = 0x%llx, valA = 0x%llx, valB = 0x%llx\n   srcA = %s, srcB = %s, dstE = %s, dstM = %s, Stat = %s\n",
+  sim_log("E: instr = %s, valC = 0x%x, valA = 0x%x, valB = 0x%x\n   srcA = %s, srcB = %s, dstE = %s, dstM = %s, Stat = %s\n",
 	  iname(HPACK(id_ex_curr->icode, id_ex_curr->ifun)),
 	  id_ex_curr->valc, id_ex_curr->vala, id_ex_curr->valb,
 	  reg_name(id_ex_curr->srca), reg_name(id_ex_curr->srcb),
 	  reg_name(id_ex_curr->deste), reg_name(id_ex_curr->destm),
 	  stat_name(id_ex_curr->status));
 
-  sim_log("M: instr = %s, Cnd = %d, valE = 0x%llx, valA = 0x%llx\n   dstE = %s, dstM = %s, Stat = %s\n",
+  sim_log("M: instr = %s, Cnd = %d, valE = 0x%x, valA = 0x%x\n   dstE = %s, dstM = %s, Stat = %s\n",
 	  iname(HPACK(ex_mem_curr->icode, ex_mem_curr->ifun)),
 	  ex_mem_curr->takebranch,
 	  ex_mem_curr->vale, ex_mem_curr->vala,
 	  reg_name(ex_mem_curr->deste), reg_name(ex_mem_curr->destm),
 	  stat_name(ex_mem_curr->status));
 
-  sim_log("W: instr = %s, valE = 0x%llx, valM = 0x%llx, dstE = %s, dstM = %s, Stat = %s\n",
+  sim_log("W: instr = %s, valE = 0x%x, valM = 0x%x, dstE = %s, dstM = %s, Stat = %s\n",
 	  iname(HPACK(mem_wb_curr->icode, mem_wb_curr->ifun)),
 	  mem_wb_curr->vale, mem_wb_curr->valm,
 	  reg_name(mem_wb_curr->deste), reg_name(mem_wb_curr->destm),
@@ -684,7 +685,7 @@ void tty_report(word_t cyc) {
 /* Return status of processor */
 /* Max_instr indicates maximum number of instructions that
    want to complete during this simulation run.  */
-static byte_t sim_step_pipe(word_t max_instr, word_t ccount)
+static byte_t sim_step_pipe(int max_instr, int ccount)
 {
     byte_t wb_status = mem_wb_curr->status;
     byte_t mem_status = mem_wb_next->status;
@@ -752,10 +753,10 @@ static byte_t sim_step_pipe(word_t max_instr, word_t ccount)
   if statusp nonnull, then will be set to status of final instruction
   if ccp nonnull, then will be set to condition codes of final instruction
 */
-word_t sim_run_pipe(word_t max_instr, word_t max_cycle, byte_t *statusp, cc_t *ccp)
+int sim_run_pipe(int max_instr, int max_cycle, byte_t *statusp, cc_t *ccp)
 {
-    word_t icount = 0;
-    word_t ccount = 0;
+    int icount = 0;
+    int ccount = 0;
     byte_t run_status = STAT_AOK;
     while (icount < max_instr && ccount < max_cycle) {
         run_status = sim_step_pipe(max_instr-icount, ccount);
@@ -801,6 +802,11 @@ void sim_log( const char *format, ... ) {
 /**********************
  * Begin Part 3 globals	
  **********************/
+
+/* Hack for SunOS */
+extern int matherr();
+int *tclDummyMathPtr = (int *) matherr;
+
 static char tcl_msg[256];
 
 /* Keep track of the TCL Interpreter */
@@ -861,7 +867,7 @@ int simLoadCodeCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[])
 {
     FILE *code_file;
-    word_t code_count;
+    int code_count;
     sim_interp = interp;
     if (argc != 2) {
 	interp->result = "One argument required";
@@ -876,7 +882,7 @@ int simLoadCodeCmd(ClientData clientData, Tcl_Interp *interp,
     sim_reset();
     code_count = load_mem(mem, code_file, 0);
     post_load_mem = copy_mem(mem);
-    sprintf(tcl_msg, "%lld", code_count);
+    sprintf(tcl_msg, "%d", code_count);
     interp->result = tcl_msg;
     fclose(code_file);
     return TCL_OK;
@@ -886,7 +892,7 @@ int simLoadDataCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[])
 {
     FILE *data_file;
-    word_t word_count = 0;
+    int word_count = 0;
     interp->result = "Not implemented";
     return TCL_ERROR;
 
@@ -902,7 +908,7 @@ int simLoadDataCmd(ClientData clientData, Tcl_Interp *interp,
 	interp->result = tcl_msg;
 	return TCL_ERROR;
     }
-    sprintf(tcl_msg, "%lld", word_count);
+    sprintf(tcl_msg, "%d", word_count);
     interp->result = tcl_msg;
     fclose(data_file);
     return TCL_OK;
@@ -912,7 +918,7 @@ int simLoadDataCmd(ClientData clientData, Tcl_Interp *interp,
 int simRunCmd(ClientData clientData, Tcl_Interp *interp,
 	      int argc, char *argv[])
 {
-    word_t cycle_limit = 1;
+    int cycle_limit = 1;
     byte_t status;
     cc_t cc;
     sim_interp = interp;
@@ -921,7 +927,7 @@ int simRunCmd(ClientData clientData, Tcl_Interp *interp,
 	return TCL_ERROR;
     }
     if (argc >= 2 &&
-	(sscanf(argv[1], "%lld", &cycle_limit) != 1 ||
+	(sscanf(argv[1], "%d", &cycle_limit) != 1 ||
 	 cycle_limit < 0)) {
 	sprintf(tcl_msg, "Cannot run for '%s' cycles!", argv[1]);
 	interp->result = tcl_msg;
@@ -982,7 +988,7 @@ void addAppCommands(Tcl_Interp *interp)
 /* Provide mechanism for simulator to update register display */
 void signal_register_update(reg_id_t r, word_t val) {
     int code;
-    sprintf(tcl_msg, "setReg %d %lld 1", (int) r, (word_t) val);
+    sprintf(tcl_msg, "setReg %d %d 1", (int) r, (int) val);
     code = Tcl_Eval(sim_interp, tcl_msg);
     if (code != TCL_OK) {
 	fprintf(stderr, "Failed to signal register set\n");
@@ -993,21 +999,21 @@ void signal_register_update(reg_id_t r, word_t val) {
 /* Provide mechanism for simulator to generate memory display */
 void create_memory_display() {
     int code;
-    sprintf(tcl_msg, "createMem %lld %lld", minAddr, memCnt);
+    sprintf(tcl_msg, "createMem %d %d", minAddr, memCnt);
     code = Tcl_Eval(sim_interp, tcl_msg);
     if (code != TCL_OK) {
 	fprintf(stderr, "Command '%s' failed\n", tcl_msg);
 	fprintf(stderr, "Error Message was '%s'\n", sim_interp->result);
     } else {
-	word_t i;
-	for (i = 0; i < memCnt && code == TCL_OK; i+=8) {
-	    word_t addr = minAddr+i;
-	    word_t val;
+	int i;
+	for (i = 0; i < memCnt && code == TCL_OK; i+=4) {
+	    int addr = minAddr+i;
+	    int val;
 	    if (!get_word_val(mem, addr, &val)) {
 		fprintf(stderr, "Out of bounds memory display\n");
 		return;
 	    }
-	    sprintf(tcl_msg, "setMem %lld %lld", addr, val);
+	    sprintf(tcl_msg, "setMem %d %d", addr, val);
 	    code = Tcl_Eval(sim_interp, tcl_msg);
 	}
 	if (code != TCL_OK) {
@@ -1018,20 +1024,20 @@ void create_memory_display() {
 }
 
 /* Provide mechanism for simulator to update memory value */
-void set_memory(word_t addr, word_t val) {
+void set_memory(int addr, int val) {
     int code;
-    word_t nminAddr = minAddr;
-    word_t nmemCnt = memCnt;
+    int nminAddr = minAddr;
+    int nmemCnt = memCnt;
 
     /* First see if we need to expand memory range */
     if (memCnt == 0) {
 	nminAddr = addr;
-	memCnt = 8;
+	memCnt = 4;
     } else if (addr < minAddr) {
 	nminAddr = addr;
 	nmemCnt = minAddr + memCnt - addr;
     } else if (addr >= minAddr+memCnt) {
-	nmemCnt = addr-minAddr+8;
+	nmemCnt = addr-minAddr+4;
     }
     /* Now make sure nminAddr & nmemCnt are multiples of 16 */
     nmemCnt = ((nminAddr & 0xF) + nmemCnt + 0xF) & ~0xF;
@@ -1042,10 +1048,10 @@ void set_memory(word_t addr, word_t val) {
 	memCnt = nmemCnt;
 	create_memory_display();
     } else {
-	sprintf(tcl_msg, "setMem %lld %lld", addr, val);
+	sprintf(tcl_msg, "setMem %d %d", addr, val);
 	code = Tcl_Eval(sim_interp, tcl_msg);
 	if (code != TCL_OK) {
-	    fprintf(stderr, "Couldn't set memory value 0x%llx to 0x%llx\n",
+	    fprintf(stderr, "Couldn't set memory value 0x%x to 0x%x\n",
 		    addr, val);
 	    fprintf(stderr, "Error Message was '%s'\n", sim_interp->result);
 	}
@@ -1083,7 +1089,7 @@ void show_stat(stat_t stat)
 void show_cpi() {
     int code;
     double cpi = instructions > 0 ? (double) cycles/instructions : 1.0;
-    sprintf(tcl_msg, "showCPI %lld %lld %.2f",
+    sprintf(tcl_msg, "showCPI %d %d %.2f",
 	    cycles, instructions, (double) cpi);
     code = Tcl_Eval(sim_interp, tcl_msg);
     if (code != TCL_OK) {
@@ -1120,12 +1126,12 @@ void signal_register_clear() {
    read in
 */
 
-void report_line(word_t line_no, word_t addr, char *hex, char *text) {
+void report_line(int line_no, int addr, char *hex, char *text) {
     int code;
-    sprintf(tcl_msg, "addCodeLine %lld %lld {%s} {%s}", line_no, addr, hex, text);
+    sprintf(tcl_msg, "addCodeLine %d %d {%s} {%s}", line_no, addr, hex, text);
     code = Tcl_Eval(sim_interp, tcl_msg);
     if (code != TCL_OK) {
-	fprintf(stderr, "Failed to report code line 0x%llx\n", addr);
+	fprintf(stderr, "Failed to report code line 0x%x\n", addr);
 	fprintf(stderr, "Error Message was '%s'\n", sim_interp->result);
     }
 }
@@ -1187,10 +1193,10 @@ void report_pc(unsigned fpc, unsigned char fpcv,
 }
 
 /* Report single line of pipeline state */
-void report_state(char *id, word_t current, char *txt)
+void report_state(char *id, int current, char *txt)
 {
     int status;
-    sprintf(tcl_msg, "updateStage %s %lld {%s}", id, current,txt);
+    sprintf(tcl_msg, "updateStage %s %d {%s}", id, current,txt);
     status = Tcl_Eval(sim_interp, tcl_msg);
     if (status != TCL_OK) {
 	fprintf(stderr, "Failed to report pipe status\n");
@@ -1323,12 +1329,12 @@ static char digits[16] =
 /* Print hex/oct/binary format with leading zeros */
 /* bpd denotes bits per digit  Should be in range 1-4,
    pbw denotes bits per word.*/
-void wprint(uword_t x, int bpd, int bpw, FILE *fp)
+void wprint(unsigned x, int bpd, int bpw, FILE *fp)
 {
   int digit;
-  uword_t mask = ((uword_t) 1 << bpd) - 1;
+  unsigned mask = (1 << bpd) - 1;
   for (digit = (bpw-1)/bpd; digit >= 0; digit--) {
-    uword_t val = (x >> (digit * bpd)) & mask;
+    unsigned val = (x >> (digit * bpd)) & mask;
     putc(digits[val], fp);
   }
 }
@@ -1336,12 +1342,12 @@ void wprint(uword_t x, int bpd, int bpw, FILE *fp)
 /* Create string in hex/oct/binary format with leading zeros */
 /* bpd denotes bits per digit  Should be in range 1-4,
    pbw denotes bits per word.*/
-void wstring(uword_t x, int bpd, int bpw, char *str)
+void wstring(unsigned x, int bpd, int bpw, char *str)
 {
   int digit;
-  uword_t mask = ((uword_t) 1 << bpd) - 1;
+  unsigned mask = (1 << bpd) - 1;
   for (digit = (bpw-1)/bpd; digit >= 0; digit--) {
-    uword_t val = (x >> (digit * bpd)) & mask;
+    unsigned val = (x >> (digit * bpd)) & mask;
     *str++ = digits[val];
   }
   *str = '\0';
@@ -1369,15 +1375,15 @@ mem_wb_ele bubble_mem_wb = { I_NOP, 0, 0, 0, REG_NONE, REG_NONE,
 
 /*************** Stage Implementations *****************/
 
-word_t gen_f_pc();
-word_t gen_need_regids();
-word_t gen_need_valC();
-word_t gen_instr_valid();
-word_t gen_f_predPC();
-word_t gen_f_icode();
-word_t gen_f_ifun();
-word_t gen_f_stat();
-word_t gen_instr_valid();
+int gen_f_pc();
+int gen_need_regids();
+int gen_need_valC();
+int gen_instr_valid();
+int gen_f_predPC();
+int gen_f_icode();
+int gen_f_ifun();
+int gen_f_stat();
+int gen_instr_valid();
 
 void do_if_stage()
 {
@@ -1400,14 +1406,14 @@ void do_if_stage()
     if_id_next->icode = gen_f_icode();
     if_id_next->ifun  = gen_f_ifun();
     if (!imem_error) {
-	sim_log("\tFetch: f_pc = 0x%llx, imem_instr = %s, f_instr = %s\n",
+	sim_log("\tFetch: f_pc = 0x%x, imem_instr = %s, f_instr = %s\n",
 		f_pc, iname(instr),
 		iname(HPACK(if_id_next->icode, if_id_next->ifun)));
     }
 
     instr_valid = gen_instr_valid();
     if (!instr_valid) 
-      sim_log("\tFetch: Instruction code 0x%llx invalid\n", instr);
+      sim_log("\tFetch: Instruction code 0x%x invalid\n", instr);
     if_id_next->status = gen_f_stat();
 
     valp++;
@@ -1419,7 +1425,7 @@ void do_if_stage()
     if_id_next->rb = LO4(regids);
     if (gen_need_valC()) {
 	get_word_val(mem, valp, &valc);
-	valp+= 8;
+	valp+= 4;
     }
     if_id_next->valp = valp;
     if_id_next->valc = valc;
@@ -1431,17 +1437,17 @@ void do_if_stage()
     if_id_next->stage_pc = f_pc;
 }
 
-word_t gen_d_srcA();
-word_t gen_d_srcB();
-word_t gen_d_dstE();
-word_t gen_d_dstM();
-word_t gen_d_valA();
-word_t gen_d_valB();
-word_t gen_w_dstE();
-word_t gen_w_valE();
-word_t gen_w_dstM();
-word_t gen_w_valM();
-word_t gen_Stat();
+int gen_d_srcA();
+int gen_d_srcB();
+int gen_d_dstE();
+int gen_d_dstM();
+int gen_d_valA();
+int gen_d_valB();
+int gen_w_dstE();
+int gen_w_valE();
+int gen_w_dstM();
+int gen_w_valM();
+int gen_Stat();
 
 /* Implements both ID and WB */
 void do_id_wb_stages()
@@ -1475,13 +1481,13 @@ void do_id_wb_stages()
     id_ex_next->status = if_id_curr->status;
 }
 
-word_t gen_alufun();
-word_t gen_set_cc();
-word_t gen_Bch();
-word_t gen_aluA();
-word_t gen_aluB();
-word_t gen_e_valA();
-word_t gen_e_dstE();
+int gen_alufun();
+int gen_set_cc();
+int gen_Bch();
+int gen_aluA();
+int gen_aluB();
+int gen_e_valA();
+int gen_e_dstE();
 
 void do_ex_stage()
 {
@@ -1505,7 +1511,7 @@ void do_ex_stage()
     /* Perform the ALU operation */
     word_t aluout = compute_alu(alufun, alua, alub);
     ex_mem_next->vale = aluout;
-    sim_log("\tExecute: ALU: %c 0x%llx 0x%llx --> 0x%llx\n",
+    sim_log("\tExecute: ALU: %c 0x%x 0x%x --> 0x%x\n",
 	    op_name(alufun), alua, alub, aluout);
 
     if (setcc) {
@@ -1524,10 +1530,10 @@ void do_ex_stage()
 }
 
 /* Functions defined using HCL */
-word_t gen_mem_addr();
-word_t gen_mem_read();
-word_t gen_mem_write();
-word_t gen_m_stat();
+int gen_mem_addr();
+int gen_mem_read();
+int gen_mem_write();
+int gen_m_stat();
 
 void do_mem_stage()
 {
@@ -1543,7 +1549,7 @@ void do_mem_stage()
     if (read) {
 	dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
 	if (!dmem_error)
-	  sim_log("\tMemory: Read 0x%llx from 0x%llx\n",
+	  sim_log("\tMemory: Read 0x%x from 0x%x\n",
 		  valm, mem_addr);
     }
     if (mem_write) {
@@ -1551,7 +1557,7 @@ void do_mem_stage()
 	/* Do a read of address just to check validity */
 	dmem_error = dmem_error || !get_word_val(mem, mem_addr, &sink);
 	if (dmem_error)
-	  sim_log("\tMemory: Invalid address 0x%llx\n",
+	  sim_log("\tMemory: Invalid address 0x%x\n",
 		  mem_addr);
     }
     mem_wb_next->icode = ex_mem_curr->icode;
@@ -1566,13 +1572,13 @@ void do_mem_stage()
 
 /* Set stalling conditions for different stages */
 
-word_t gen_F_stall(), gen_F_bubble();
-word_t gen_D_stall(), gen_D_bubble();
-word_t gen_E_stall(), gen_E_bubble();
-word_t gen_M_stall(), gen_M_bubble();
-word_t gen_W_stall(), gen_W_bubble();
+int gen_F_stall(), gen_F_bubble();
+int gen_D_stall(), gen_D_bubble();
+int gen_E_stall(), gen_E_bubble();
+int gen_M_stall(), gen_M_bubble();
+int gen_W_stall(), gen_W_bubble();
 
-p_stat_t pipe_cntl(char *name, word_t stall, word_t bubble)
+p_stat_t pipe_cntl(char *name, int stall, int bubble)
 {
     if (stall) {
 	if (bubble) {

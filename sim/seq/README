@@ -1,7 +1,7 @@
 /***********************************************************************
- * Sequential Y86-64 Simulators
+ * Sequential Y86 Simulators
  *
- * Copyright (c) 2002, 2010, 2013, 2015  R. Bryant and D. O'Hallaron,
+ * Copyright (c) 2002, 2010,  R. Bryant and D. O'Hallaron,
  * All rights reserved.
  * May not be used, modified, or copied without permission.
  ***********************************************************************/ 
@@ -19,7 +19,7 @@ problems.
 
 Binary	VERSION	HCL File	Description
 ssim	std	seq-std.hcl	Standard SEQ simulator described in textbook.
-ssim	full	seq-full.hcl	For adding iaddq to SEQ.
+ssim	full	seq-full.hcl	For adding iaddl and leave to SEQ.
 ssim+	std	seq+-std.hcl	Standard SEQ+ simulator described in textbook.
 
 The simulators run in either TTY or GUI mode:
@@ -83,9 +83,9 @@ sim.h
 
 seq-std.hcl		Standard SEQ control logic
 seq+-std.hcl		Standard SEQ+ control logic	
-seq-full.hcl		Template for the iaddq problem (4.34-35)
+seq-full.hcl		Template for the iaddl and leave problems (4.34-35)
 
-seq-full-ans.hcl	Solution for the iaddq problems (4.34-35)
+seq-full-ans.hcl	Solution for the iaddl and leave problems (4.34-35)
 			(Instructor distribution only)
 
 

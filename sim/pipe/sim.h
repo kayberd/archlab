@@ -1,4 +1,3 @@
-
 /********** Typedefs ************/
 
 /* EX stage mux settings */
@@ -23,16 +22,16 @@ typedef enum { IF_STAGE, ID_STAGE, EX_STAGE, MEM_STAGE, WB_STAGE } stage_id_t;
 /************ Global state declaration ****************/
 
 /* How many cycles have been simulated? */
-extern word_t cycles;
+extern int cycles;
 /* How many instructions have passed through the EX stage? */
-extern word_t instructions;
+extern int instructions;
 
 /* Both instruction and data memory */
 extern mem_t mem;
 
 /* Keep track of range of addresses that have been written */
-extern word_t minAddr;
-extern word_t memCnt;
+extern int minAddr;
+extern int memCnt;
 
 /* Register file */
 extern mem_t reg;
@@ -116,7 +115,7 @@ void sim_reset();
   if statusp nonnull, then will be set to status of final instruction
   if ccp nonnull, then will be set to condition codes of final instruction
 */
-word_t sim_run_pipe(word_t max_instr, word_t max_cycle, byte_t *statusp, cc_t *ccp);
+int sim_run_pipe(int max_instr, int max_cycle, byte_t *statusp, cc_t *ccp);
 
 /* If dumpfile set nonNULL, lots of status info printed out */
 void sim_set_dumpfile(FILE *file);
@@ -141,13 +140,13 @@ void report_pc(unsigned fpc, unsigned char fpcv,
 	       unsigned mpc, unsigned char mpcv,
 	       unsigned wpc, unsigned char wpcv);
 
-void report_state(char *id, word_t current, char *txt);
+void report_state(char *id, int current, char *txt);
 
 void show_cc(cc_t cc);
 void show_cpi();
 void show_stat(stat_t stat);
 
 void create_memory_display();
-void set_memory(word_t addr, word_t val);
+void set_memory(int addr, int val);
 #endif
 								       

@@ -1,35 +1,53 @@
+/* $begin code-yso */
+/* $begin code-ysa */
 # Execution begins at address 0 
-	.pos 0
-	irmovq stack, %rsp  	# Set up stack pointer
-	call main		# Execute main program
+	.pos 0 
+init:	irmovl Stack, %esp  	# Set up stack pointer  
+	irmovl Stack, %ebp  	# Set up base pointer   
+	call Main		# Execute main program
 	halt			# Terminate program 
 
 # Array of 4 elements
-	.align 8
-array:	.quad 0x000d000d000d
-	.quad 0x00c000c000c0
-	.quad 0x0b000b000b00
-	.quad 0xa000a000a000
+	.align 4 	
+array:	.long 0xd
+	.long 0xc0
+	.long 0xb00
+	.long 0xa000	
 
-main:	irmovq array,%rdi
-	irmovq $4,%rsi
-	call sum		# sum(array, 4)
+Main:	pushl %ebp 
+	rrmovl %esp,%ebp
+	irmovl $4,%eax	
+	pushl %eax		# Push 4
+	irmovl array,%edx
+	pushl %edx      	# Push array
+	call Sum		# Sum(array, 4)
+	rrmovl %ebp,%esp
+	popl %ebp
+	ret 
+
+/* $begin sum-ys 0 */
+	# int Sum(int *Start, int Count)
+Sum:	pushl %ebp
+	rrmovl %esp,%ebp
+	mrmovl 8(%ebp),%ecx 	# ecx = Start
+	mrmovl 12(%ebp),%edx	# edx = Count
+	xorl %eax,%eax		# sum = 0
+	andl   %edx,%edx	# Set condition codes
+	je     End
+Loop:	mrmovl (%ecx),%esi	# get *Start
+	addl %esi,%eax          # add to sum
+	irmovl $4,%ebx          # 
+	addl %ebx,%ecx          # Start++
+	irmovl $-1,%ebx	        # 
+	addl %ebx,%edx          # Count--
+	jne    Loop             # Stop when 0
+End:	rrmovl %ebp,%esp
+	popl %ebp
 	ret
+/* $end sum-ys 0 */
 
-# long sum(long *start, long count)
-# start in %rdi, count in %rsi
-sum:	irmovq $8,%r8        # Constant 8
-	irmovq $1,%r9	     # Constant 1
-	xorq %rax,%rax	     # sum = 0
-	andq %rsi,%rsi	     # Set CC
-	jmp     test         # Goto test
-loop:	mrmovq (%rdi),%r10   # Get *start
-	addq %r10,%rax       # Add to sum
-	addq %r8,%rdi        # start++
-	subq %r9,%rsi        # count--.  Set CC
-test:	jne    loop          # Stop when 0
-	ret                  # Return
-
-# Stack starts here and grows to lower addresses
-	.pos 0x200
-stack:
+# The stack starts here and grows to lower addresses
+	.pos 0x100		
+Stack:	 
+/* $end code-ysa */
+/* $end code-yso */

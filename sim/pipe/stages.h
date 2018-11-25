@@ -3,6 +3,7 @@
  * Declares the functions that implement the pipeline stages
 */
 
+
 /********** Pipeline register contents **************/
 
 /* Program Counter */

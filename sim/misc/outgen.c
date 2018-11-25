@@ -37,7 +37,7 @@ static void print_token(char *string) {
       fprintf(outfile, " ");
     cur_pos = indent;
   }
-  fprintf(outfile, "%s", string);
+  fprintf(outfile, string);
   cur_pos += len;
 }
 

@@ -56,8 +56,8 @@ void clear_pipes();
 /* Print hex/oct/binary format with leading zeros */
 /* bpd denotes bits per digit  Should be in range 1-4,
    bpw denotes bits per word.*/
-void wprint(uword_t x, int bpd, int bpw, FILE *fp);
-void wstring(uword_t x, int bpd, int bpw, char *s);
+void wprint(unsigned x, int bpd, int bpw, FILE *fp);
+void wstring(unsigned x, int bpd, int bpw, char *s);
 
 /******************************************************************************/
 
