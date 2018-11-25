@@ -1,3 +1,5 @@
+/* $begin code-yso */
+/* $begin code-ysa */
 #
 # Victoria Pierce
 # pierc507
@@ -35,6 +37,7 @@ Main:
 			ret
 
 # int sum_list(list_ptr ls)
+/* $begin sum-ys 0 */
 sum_list: 	
 			pushl %ebp 
 			rrmovl %esp,%ebp
@@ -50,7 +53,10 @@ Loop:		mrmovl (%ecx),%esi		# get *ls
 End: 		rrmovl %ebp,%esp
 			popl %ebp
 			ret
+/* $end sum-ys 0 */
 
 # The stack starts here and grows to lower addresses 
 			.pos 0x100
 Stack:
+/* $end code-ysa */
+/* $end code-yso */
