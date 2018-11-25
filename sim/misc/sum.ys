@@ -24,7 +24,8 @@ ele3:
 			.long 0xc00
 			.long 0
 
-Main: 		pushl %ebp 
+Main: 		
+			pushl %ebp 
 			rrmovl %esp,%ebp
 			irmovl ele1,%eax
 			pushl %eax 				# push ele1
@@ -34,7 +35,8 @@ Main: 		pushl %ebp
 			ret
 
 # int sum_list(list_ptr ls)
-sum_list: 	pushl %ebp 
+sum_list: 	
+			pushl %ebp 
 			rrmovl %esp,%ebp
 			mrmovl 8(%ebp),%ecx 	# ecx = ele1
 			xorl %eax, %eax			# eax = 0
