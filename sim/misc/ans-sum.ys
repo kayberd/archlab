@@ -29,13 +29,13 @@ Main: 		pushl %ebp
 # int sum_list(list_ptr ls)
 sum_list: 	pushl %ebp 
 			rrmovl %esp,%ebp
-			mrmovl 8(%ebp),%ecx 	# ecx = ele1
+			mrmovl 4(%ebp),%ecx 	# ecx = ele1
 			xorl %eax, %eax			# eax = 0
 			andl %ecx, %ecx 		# test ecx
 			je End
 Loop:		mrmovl (%ecx),%esi		# get *ls
 			addl %esi,%eax			# add to sum
-			mrmovl 4(%ecx), %ecx 	# ls = ls->next
+			mrmovl 2(%ecx), %ecx 	# ls = ls->next
 			andl %ecx, %ecx 		# test ecx
 			jne Loop
 End: 		rrmovl %ebp,%esp
