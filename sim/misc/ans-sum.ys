@@ -1,7 +1,7 @@
 # Execution begins at address 0 
 			.pos 0
-init: 		irmovl Stack, %esp	 	# set up stack pointer 
-			irmovl Stack, %ebp 		# set up base pointer 
+init: 		irmovq Stack, %esp	 	# set up stack pointer 
+			irmovq Stack, %ebp 		# set up base pointer 
 			call Main 				# execute main program 
 			halt 					# terminate program 
 
@@ -17,13 +17,13 @@ ele3:
 			.quad 0x00c
 			.quad 0
 
-Main: 		pushl %ebp 
-			rrmovl %esp,%ebp
-			irmovl ele1,%eax
-			pushl %eax 				# push ele1
+Main: 		pushq %ebp 
+			rrmovq %esp,%ebp
+			irmovq ele1,%eax
+			pushq %eax 				# push ele1
 			call sum_list			# sum_list(ele1) 
-			rrmovl %ebp,%esp
-			popl %ebp
+			rrmovq %ebp,%esp
+			popq %ebp
 			ret
 
 # int sum_list(list_ptr ls)
