@@ -8,7 +8,7 @@ init: 		irmovl Stack, %esp	 	# set up stack pointer
 # Sample linked list
 			.align 8
 ele1:
-			.quad 0Xa00
+			.quad 0xa00
 			.quad ele2
 ele2:
 			.quad 0x0b0

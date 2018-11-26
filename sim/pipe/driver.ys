@@ -21,7 +21,7 @@ StartFun:
 # ncopy.ys - Copy a src block of len ints to dst.
 # Return the number of positive ints (>0) contained in src.
 #
-# Include your name and ID here.
+# Victoria Pierce pierc507
 #
 # Describe how and why you modified the baseline code.
 #
