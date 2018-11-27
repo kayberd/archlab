@@ -1,7 +1,7 @@
 # Execution begins at address 0 
 			.pos 0
-init: 		irmovl Stack, %esp	 	# set up stack pointer 
-			irmovl Stack, %ebp 		# set up base pointer 
+init: 		irmovq Stack, %esp	 	# set up stack pointer 
+			irmovq Stack, %ebp 		# set up base pointer 
 			call Main 				# execute main program 
 			halt 					# terminate program 
 
@@ -18,39 +18,39 @@ dest:
 			.quad 0x222
 			.quad 0x333
 
-Main: 		pushl %ebp 
-			rrmovl %esp,%ebp
-			irmovl $3,%eax
-			pushl %eax				# push 3
-			irmovl dest,%eax
-			pushl %eax 				# push dest
-			irmovl src,%eax
-			pushl %eax				# push src
+Main: 		pushq %ebp 
+			rrmovq %esp,%ebp
+			irmovq $3,%eax
+			pushq %eax				# push 3
+			irmovq dest,%eax
+			pushq %eax 				# push dest
+			irmovq src,%eax
+			pushq %eax				# push src
 			call copy_block			# copy_block(src, dest, 3) 
-			rrmovl %ebp,%esp
-			popl %ebp
+			rrmovq %ebp,%esp
+			popq %ebp
 			ret
 
 # int copy_block(int *src, int *dest, int len)
-copy_block: pushl %ebp 
-			rrmovl %esp,%ebp
-			mrmovl 8(%ebp),%edx 	# edx = src
-			mrmovl 12(%ebp),%ecx	# ecx = dest
-			mrmovl 16(%ebp),%ebx	# ebx = 3
-			xorl %eax,%eax			# eax = 0
-			andl %ebx,%ebx			# test ebx
+copy_block: pushq %ebp 
+			rrmovq %esp,%ebp
+			mrmovq 8(%ebp),%edx 	# edx = src
+			mrmovq 12(%ebp),%ecx	# ecx = dest
+			mrmovq 16(%ebp),%ebx	# ebx = 3
+			xorq %eax,%eax			# eax = 0
+			andq %ebx,%ebx			# test ebx
 			je End
-Loop:		mrmovl (%edx),%esi
-			rmmovl %esi,(%ecx)
-			xorl %esi,%eax 			# eax ^= esi
-			irmovl $4,%esi
-			addl %esi,%edx 			# edx -= 4
-			addl %esi,%ecx 			# ecx -= 4
-			irmovl $-1,%esi
-			addl %esi,%ebx			# ebx--
+Loop:		mrmovq (%edx),%esi
+			rmmovq %esi,(%ecx)
+			xorq %esi,%eax 			# eax ^= esi
+			irmovq $4,%esi
+			addq %esi,%edx 			# edx -= 4
+			addq %esi,%ecx 			# ecx -= 4
+			irmovq $-1,%esi
+			addq %esi,%ebx			# ebx--
 			jne Loop
-End: 		rrmovl %ebp,%esp
-			popl %ebp
+End: 		rrmovq %ebp,%esp
+			popq %ebp
 			ret
 
 # The stack starts here and grows to lower addresses 
